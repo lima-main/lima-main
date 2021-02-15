@@ -57,6 +57,7 @@
 .metaanalysis .dataColumn {
   background-color: rgba(182, 234, 255, 0.5);
 }
+
 .metaanalysis .columnHeadings .dataColumnHeader {
   background-color: #add8e6 !important;
 }
@@ -68,7 +69,7 @@
   padding: 4px;
 }
 
-.metaanalysis .columnHeadings th{
+.metaanalysis .columnHeadings th {
   border: 4px solid black;
   color: black;
   text-align: center;

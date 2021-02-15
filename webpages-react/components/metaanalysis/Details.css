@@ -104,7 +104,7 @@
 .details .commentContainer .commentText .activeCommentScroller,
 .details .commentContainer .commentText .activeCommentScroller:focus {
   background-color: #33c1ff;
-  cursor:pointer;
+  cursor: pointer;
   outline: none;
   height: 30px;
   width: 30px;
@@ -149,7 +149,7 @@
 .details .commentContainer .postCommentActive,
 .details .commentContainer .postCommentActive:focus {
   outline: none;
-  height: 100px
+  height: 100px;
 }
 
 .details .commentContainer .postCommentInactive,
