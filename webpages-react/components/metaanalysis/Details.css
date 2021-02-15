@@ -43,7 +43,6 @@
   outline: none;
 }
 
-
 .details .content {
   margin-left: 0.5em;
   width: 95%;
@@ -85,7 +84,7 @@
 }
 
 .details .commentContainer .commentHolderOuter {
- height: 100%;
+  height: 100%;
 }
 
 .details .commentContainer .commentHolderInner {
@@ -130,14 +129,14 @@
 
 .leftCommentScroller {
   position: absolute;
-  top:0;
-  left:0;
+  top: 0;
+  left: 0;
 }
 
 .rightCommentScroller {
   position: absolute;
-  top:0;
-  right:0;
+  top: 0;
+  right: 0;
 }
 
 .details .commentContainer .postComment {

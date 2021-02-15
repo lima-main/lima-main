@@ -15,14 +15,14 @@
   background-color: lightgrey;
   outline: none;
   cursor: pointer;
+
   /* Prevent text highlight */
   -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Edge, Opera and Firefox */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 .aggregates .analysisButton:hover {
@@ -78,14 +78,14 @@
   background-color: #ff5745;
   outline: none;
   cursor: pointer;
+
   /* Prevent text highlight */
   -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Edge, Opera and Firefox */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 .removeAnalysisButton:hover {
@@ -97,6 +97,7 @@
   display: block;
   text-align: center;
 }
+
 #simpleInputForm label,
 #moderatorInputForm label,
 #modFilterForm div label {
@@ -105,6 +106,7 @@
   margin: 10px;
   text-align: left;
 }
+
 #simpleInputForm label input,
 #simpleInputForm label input:focus,
 #moderatorInputForm label input,
