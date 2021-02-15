@@ -1,0 +1,26 @@
+extends: eslint:recommended
+
+parserOptions:
+  ecmaVersion: 8
+
+env:
+  browser: true
+  node: false
+
+rules:
+  no-console: off
+  comma-dangle:
+    - error
+    - only-multiline
+  indent:
+    - error
+    - 2
+    - MemberExpression: off
+  no-inner-declarations: off
+  semi:
+    - 2
+    - always
+
+globals:
+  Promise: true
+  math: true

@@ -1,0 +1,62 @@
+<!doctype html>
+<title>LiMA tests</title>
+<link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+<style>
+  pre {
+    border: 1px solid black;
+    border-radius: 0.3em;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    line-height: 1.3em;
+    white-space: pre-wrap;
+    min-height: 10em;
+  }
+
+  pre:empty::before {
+    content: 'no output';
+    color: #888;
+    display: block;
+    font-style: italic;
+  }
+</style>
+
+<h1>LiMA tests</h1>
+
+<p>test output:</p>
+
+<pre id="testoutput"></pre>
+
+
+<script src="/lib/promise.js"></script>
+<script src="/lib/fetch.js"></script>
+<script src="/lib/math.min.js"></script>
+<script src="https://apis.google.com/js/platform.js"></script>
+
+<script src="/js/tools.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/userprofile.js"></script>
+<script src="/js/graphs.js"></script>
+<script src="/js/formulas.js"></script>
+<script src="/js/papers.js"></script>
+<script src="/js/metaanalyses.js"></script>
+<script src="/js/version.js"></script>
+
+<script src="/tests/homepage.js"></script>
+
+<script>
+window.testoutput.textContent = 'waiting...\nif this takes long, see console output';
+window.lima.initPage = function () {
+  var lima = window.lima;
+  var _ = lima._;  // underscore symbol is used for brevity, defined in tools.js
+
+  window.testoutput.textContent = 'testing\n';
+  try {
+    var testing = window.location.search == '?testing';
+    window.limaTestingMode = testing;
+    _.runTests(testing);
+  } catch(e) {
+    console.error(e);
+    window.testoutput.textContent += 'error, see console output\n';
+  }
+};
+</script>
