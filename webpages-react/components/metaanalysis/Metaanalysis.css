@@ -112,12 +112,12 @@
 
 .metaanalysis .grabberButton {
   background: none;
-	color: inherit;
-	border: none;
-	padding: 0;
-	font: inherit;
-	cursor: pointer;
-	outline: inherit;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
   display: block;
   width: 2em;
   height: 2em;
@@ -167,7 +167,7 @@
 }
 
 #toggle-editing:hover {
-  background-color: #FF69B4;
+  background-color: #ff69b4;
 }
 
 #toggle-editing.editMode {
@@ -287,7 +287,7 @@
 
 .metaanalysis .addExperimentButton {
   background: none;
-	color: inherit;
+  color: inherit;
 	border: none;
 	padding: 0;
 	font: inherit;
