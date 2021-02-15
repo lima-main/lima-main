@@ -148,7 +148,7 @@ svg.forestplotgroup .summary .sumname.sumtotal {
 }
 
 .graphForm label input,
-.graphForm label input:focus{
+.graphForm label input:focus {
   border: 0.1em solid black;
   outline: none;
   height: 2em;
@@ -172,7 +172,7 @@ svg.forestplotgroup .summary .sumname.sumtotal {
   width: 10em;
   height: 2em;
   text-align: center;
-  background-color: #32CD32;
+  background-color: #32cd32;
   outline: none;
   cursor: pointer;
 
@@ -186,7 +186,7 @@ svg.forestplotgroup .summary .sumname.sumtotal {
 }
 
 .graphSubmit:hover {
-  background-color: #228B22;
+  background-color: #228b22;
 }
 
 #plotContainer {
@@ -219,7 +219,7 @@ svg.forestplotgroup .summary .sumname.sumtotal {
   width: 100%;
   height: 100%;
   text-align: center;
-  background-color: #FFC0CB;
+  background-color: #ffc0cb;
   outline: none;
   cursor: pointer;
 
@@ -234,7 +234,7 @@ svg.forestplotgroup .summary .sumname.sumtotal {
 
 #editGraphButton:hover,
 #addGraphButton:hover {
-  background-color: #FF69B4;
+  background-color: #ff69b4;
 }
 
 .removeGraphButton {

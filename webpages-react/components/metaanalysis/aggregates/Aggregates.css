@@ -108,8 +108,8 @@
 }
 
 #moderatorInputForm label input,
-#moderatorInputForm label input:focus,
 #simpleInputForm label input,
+#moderatorInputForm label input:focus,
 #simpleInputForm label input:focus {
   border: 0.1em solid black;
   outline: none;

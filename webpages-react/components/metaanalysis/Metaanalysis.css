@@ -62,6 +62,14 @@
   background-color: #add8e6 !important;
 }
 
+.metaanalysis table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #2f7494;
+  color: white;
+}
+
 .metaanalysis table td,
 .metaanalysis table th {
   border-left: 0.5px solid rgb(66, 66, 66);
@@ -77,14 +85,6 @@
 
 .metaanalysis table tr:nth-child(even) {
   background-color: #ebebeb;
-}
-
-.metaanalysis table th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  text-align: left;
-  background-color: #2f7494;
-  color: white;
 }
 
 .metaanalysis table .active {
@@ -156,6 +156,7 @@
   background-color: #ffc0cb;
   outline: none;
   cursor: pointer;
+
   /* Prevent text highlight */
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -249,6 +250,7 @@
   background-color: #32cd32;
   outline: none;
   cursor: pointer;
+
   /* Prevent text highlight */
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -271,10 +273,10 @@
 }
 
 .metaanalysis .addPaperForm label input,
-.metaanalysis .addPaperForm label input:focus,
 .metaanalysis .addExperimentForm label input,
-.metaanalysis .addExperimentForm label input:focus,
 .metaanalysis .addColumnForm label input,
+.metaanalysis .addPaperForm label input:focus,
+.metaanalysis .addExperimentForm label input:focus,
 .metaanalysis .addColumnForm label input:focus {
   border: 0.1em solid black;
   outline: none;
@@ -382,7 +384,7 @@ textarea {
 .removePaperButton,
 .removeExperimentButton,
 .hideShowButton {
-  position: absolute;
+  position: relative;
   left: 0;
   bottom: 0;
   width: 50px;
@@ -393,6 +395,8 @@ textarea {
   background-color: #ff5745;
   outline: none;
   cursor: pointer;
+  margin: 4px auto;
+
   /* Prevent text highlight */
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -400,14 +404,6 @@ textarea {
   -moz-user-select: none; /* Old versions of Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
-}
-
-.removeExperimentButton,
-.removePaperButton,
-.removeColumnButton,
-.hideShowButton {
-  position: relative;
-  margin: 4px auto;
 }
 
 .removeColumnButton:hover,

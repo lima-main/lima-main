@@ -17,7 +17,7 @@
   border-radius: 0.4em;
   background: #33c;
   color: white;
-  transition: background .5s;
+  transition: background 0.5s;
   vertical-align: bottom;
   position: relative;
 }
