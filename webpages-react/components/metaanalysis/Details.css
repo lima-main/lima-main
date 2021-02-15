@@ -58,9 +58,6 @@
   display: none;
 }
 
-.details table {
-}
-
 .details table tbody {
   border: 0.2em solid black;
 }
@@ -107,7 +104,7 @@
 
 .details .commentContainer .commentText .activeCommentScroller,
 .details .commentContainer .commentText .activeCommentScroller:focus {
-  background-color: #33C1FF;
+  background-color: #33c1ff;
   cursor:pointer;
   outline: none;
   height: 30px;
@@ -117,7 +114,7 @@
 
 .details .commentContainer .commentText .inactiveCommentScroller,
 .details .commentContainer .commentText .inactiveCommentScroller:focus {
-  background-color: #C0C0C0;
+  background-color: #c0c0c0;
   outline: none;
   height: 30px;
   width: 30px;
@@ -145,7 +142,7 @@
 
 .details .commentContainer .postComment {
   border-top: 3px solid black;
-  background-color: #C0C0C0;
+  background-color: #c0c0c0;
   height: 20%;
   text-align: center;
 }
@@ -179,7 +176,7 @@
 
 .details .postComment .postCommentSubmit {
   cursor: pointer;
-  background-color: #32CD32;
+  background-color: #32cd32;
 }
 
 .details .postComment .postCommentInput,
