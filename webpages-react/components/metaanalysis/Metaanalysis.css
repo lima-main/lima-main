@@ -288,12 +288,12 @@
 .metaanalysis .addExperimentButton {
   background: none;
   color: inherit;
-	border: none;
-	padding: 0;
-	font: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
   font-size: 30px;
-	cursor: pointer;
-	outline: inherit;
+  cursor: pointer;
+  outline: inherit;
   position: absolute;
   top: 0;
   right: 0;

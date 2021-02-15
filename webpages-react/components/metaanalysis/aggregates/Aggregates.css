@@ -107,14 +107,6 @@
   text-align: left;
 }
 
-#modFilterForm div label input,
-#modFilterForm div label input:focus {
-  outline: none;
-  text-align: left;
-  float: right;
-  width: 10%;
-}
-
 #moderatorInputForm label input,
 #simpleInputForm label input,
 #moderatorInputForm label input:focus,
@@ -124,6 +116,14 @@
   width: 60%;
   text-align: left;
   float: right;
+}
+
+#modFilterForm div label input,
+#modFilterForm div label input:focus {
+  outline: none;
+  text-align: left;
+  float: right;
+  width: 10%;
 }
 
 #modFilterForm div label {
