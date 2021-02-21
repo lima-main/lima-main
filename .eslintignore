@@ -3,3 +3,5 @@ coverage
 node_modules
 webpages/lib
 webpages/react-dist
+webpages/js/formulas.js
+webpages/js/graph.js
