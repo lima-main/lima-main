@@ -78,6 +78,22 @@ function grouping(){
   }
 }
 
+function computeMinWeightSpread(){
+  const MIN_WT_SPREAD = 2.5;
+  if (maxWt / minWt < MIN_WT_SPREAD) {
+    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
+    maxWt = minWt * MIN_WT_SPREAD;
+  }
+
+  // minWt = 0;
+  // todo we can uncomment this to make all weights relative to only the maximum weight
+  // square root the weights because we're using them as
+  // lengths of the side of a square whose area should correspond to the weight
+  maxWt = Math.sqrt(maxWt);
+  minWt = Math.sqrt(minWt);
+  const wtRatio = (1 / (maxWt - minWt)) * (maxGrapeSize - minGrapeSize);
+}
+
 function computeSumOfWeight(){
   if (Number.isNaN(aggregates.or * 0)
         || Number.isNaN(aggregates.lcl * 0)
@@ -147,18 +163,18 @@ function computeSumOfWeight(){
     return (val - minLcl) * xRatio;
   }
 
-  // adjust weights so that in case of very similar weights they don't range from minimum to maximum
-  const MIN_WT_SPREAD = 2.5;
-  if (maxWt / minWt < MIN_WT_SPREAD) {
-    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
-    maxWt = minWt * MIN_WT_SPREAD;
-  }
+  computeMinWeightSpread();
 
-  // minWt = 0;
-  // we can uncomment this to make all weights relative to only the maximum weight
-  maxWt = Math.sqrt(maxWt);
-  minWt = Math.sqrt(minWt);
-  const wtRatio = (1 / (maxWt - minWt)) * (maxWtSize - minWtSize);
+  
+}
+
+function getConfidenceInterval(){
+  if ((uclX - lclX) < minDiamondWidth) {
+    const ratio = (uclX - lclX) / minDiamondWidth;
+    lclX = orX + (lclX - orX) / ratio;
+    uclX = orX + (uclX - orX) / ratio;
+  }
+  const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
 }
 
 orAggrFunc.formula = window.lima.createFormulaString(orAggrFunc);
@@ -248,12 +264,7 @@ export function getSimpleForestPlotData(graph) {
 
   if (!Number.isNaN(aggregates.or * 0)) {
     const orX = getX(aggregates.or);
-    if ((uclX - lclX) < minDiamondWidth) {
-      const ratio = (uclX - lclX) / minDiamondWidth;
-      lclX = orX + (lclX - orX) / ratio;
-      uclX = orX + (uclX - orX) / ratio;
-    }
-    const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
+    getConfindenceInterval();
 
     aggregates.minWtSize = minWtSize;
     aggregates.minWt = minWt;
@@ -400,17 +411,7 @@ export function getGroupingForestPlotData(graph) {
   };
 
   computeSumOfWeight();
-
-  const MIN_WT_SPREAD = 2.5;
-  if (maxWt / minWt < MIN_WT_SPREAD) {
-    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
-    maxWt = minWt * MIN_WT_SPREAD;
-  }
-
-  maxWt = Math.sqrt(maxWt);
-  minWt = Math.sqrt(minWt);
-  const wtRatio = (1 / (maxWt - minWt)) * (maxWtSize - minWtSize);
-
+  
   let currY = startHeight;
   let currGY = groupStartHeight;
   let hasInvalid = false;
@@ -459,12 +460,7 @@ export function getGroupingForestPlotData(graph) {
       let lclX = getX(groupAggregates.lcl);
       let uclX = getX(groupAggregates.ucl);
       const orX = getX(groupAggregates.or);
-      if ((uclX - lclX) < minDiamondWidth) {
-        const ratio = (uclX - lclX) / minDiamondWidth;
-        lclX = orX + (lclX - orX) / ratio;
-        uclX = orX + (uclX - orX) / ratio;
-      }
-      const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
+      getConfindenceInterval();
       dataGroups[i].confidenceInterval = confidenceInterval;
       dataGroups[i].groupAggregates = groupAggregates;
       dataGroups[i].currGY = currGY;
@@ -490,13 +486,7 @@ export function getGroupingForestPlotData(graph) {
   if (!Number.isNaN(aggregates.or * 0) && !hasInvalid) {
     currY += 2 * lineHeight;
     const orX = getX(aggregates.or);
-    if ((uclX - lclX) < minDiamondWidth) {
-      const ratio = (uclX - lclX) / minDiamondWidth;
-      lclX = orX + (lclX - orX) / ratio;
-      uclX = orX + (uclX - orX) / ratio;
-    }
-
-    const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
+    getConfindenceInterval();
     graph.confidenceInterval = confidenceInterval;
   }
 
@@ -673,19 +663,8 @@ export function getGrapeChartData(graph) {
     return logVal > midOr;
   }
 
-  const MIN_WT_SPREAD = 2.5;
-  if (maxWt / minWt < MIN_WT_SPREAD) {
-    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
-    maxWt = minWt * MIN_WT_SPREAD;
-  }
+  computeMinWeightSpread();
 
-  // minWt = 0;
-  // todo we can uncomment this to make all weights relative to only the maximum weight
-  // square root the weights because we're using them as
-  // lengths of the side of a square whose area should correspond to the weight
-  maxWt = Math.sqrt(maxWt);
-  minWt = Math.sqrt(minWt);
-  const wtRatio = (1 / (maxWt - minWt)) * (maxGrapeSize - minGrapeSize);
 
   function getGrapeRadius(wt) {
     if (wt == null) return minGrapeSize;
