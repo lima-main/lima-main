@@ -1,24 +1,54 @@
 import { isColCompletelyDefined, getDatumValue, getAggregateDatumValue } from './datatools';
 
-function formulaOne(){
+function Graph(){
   orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
   wtFunc = { formulaName: 'weight', formulaParams };
   lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
   uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
 }
 
-function formulaTwo(){
+function numberGraph(){
   orFunc = { formulaName: 'logOddsRatioNumber', formulaParams };
   wtFunc = { formulaName: 'weightNumber', formulaParams };
   lclFunc = { formulaName: 'lowerConfidenceLimitNumber', formulaParams };
   uclFunc = { formulaName: 'upperConfidenceLimitNumber', formulaParams };
 }
 
-function formulaThree(){
+function percentGraph(){
   orFunc = { formulaName: 'logOddsRatioPercent', formulaParams: [formulaParams[0], formulaParams[2]] };
   wtFunc = { formulaName: 'weightPercent', formulaParams };
   lclFunc = { formulaName: 'lowerConfidenceLimitPercent', formulaParams };
   uclFunc = { formulaName: 'upperConfidenceLimitPercent', formulaParams };
+}
+
+function deleteLine(){
+  delete line.or;
+  delete line.lcl;
+  delete line.ucl;
+  delete line.wt;
+}
+
+function getData(){
+  orFunc.formula = window.lima.createFormulaString(orFunc);
+  wtFunc.formula = window.lima.createFormulaString(wtFunc);
+  lclFunc.formula = window.lima.createFormulaString(lclFunc);
+  uclFunc.formula = window.lima.createFormulaString(uclFunc);
+  orFunc.formulaObj = window.lima.getFormulaObject(orFunc.formulaName);
+  wtFunc.formulaObj = window.lima.getFormulaObject(wtFunc.formulaName);
+  lclFunc.formulaObj = window.lima.getFormulaObject(lclFunc.formulaName);
+  uclFunc.formulaObj = window.lima.getFormulaObject(uclFunc.formulaName);
+}
+
+function drawLine(){
+  if (paper.experiments.length > 1) {
+          let expTitle = exp.title || 'new experiment';
+          if (expTitle.match(/^\d+$/)) expTitle = `Exp. ${expTitle}`;
+          line.title += ` (${expTitle})`;
+        }
+        line.or = getDatumValue(orFunc, exp);
+        line.wt = getDatumValue(wtFunc, exp);
+        line.lcl = getDatumValue(lclFunc, exp);
+        line.ucl = getDatumValue(uclFunc, exp);
 }
 
 export function getSimpleForestPlotData(graph) {
@@ -39,27 +69,20 @@ export function getSimpleForestPlotData(graph) {
   const minDiamondWidth = 14;
 
   if (graph.formulaName === 'forestPlotGraph' && isColCompletelyDefined(graph)) {
-    formulaOne();
+    Graph();
   } else
   if (graph.formulaName === 'forestPlotNumberGraph' && isColCompletelyDefined(graph)) {
-    formulaTwo();
+    numberGraph();
   } else
   if (graph.formulaName === 'forestPlotPercentGraph' && isColCompletelyDefined(graph)) {
-    formulaThree();
+    percentGraph();
   } else {
     return;
     // this function does not handle this type of graph or the graph is not completely defined
   }
 
   // get the data
-  orFunc.formula = window.lima.createFormulaString(orFunc);
-  wtFunc.formula = window.lima.createFormulaString(wtFunc);
-  lclFunc.formula = window.lima.createFormulaString(lclFunc);
-  uclFunc.formula = window.lima.createFormulaString(uclFunc);
-  orFunc.formulaObj = window.lima.getFormulaObject(orFunc.formulaName);
-  wtFunc.formulaObj = window.lima.getFormulaObject(wtFunc.formulaName);
-  lclFunc.formulaObj = window.lima.getFormulaObject(lclFunc.formulaName);
-  uclFunc.formulaObj = window.lima.getFormulaObject(uclFunc.formulaName);
+  getData();
 
   const lines = [];
 
@@ -68,25 +91,14 @@ export function getSimpleForestPlotData(graph) {
       if (!exp.excluded) {
         const line = {};
         line.title = paper.title || 'new paper';
-        if (paper.experiments.length > 1) {
-          let expTitle = exp.title || 'new experiment';
-          if (expTitle.match(/^\d+$/)) expTitle = `Exp. ${expTitle}`;
-          line.title += ` (${expTitle})`;
-        }
-        line.or = getDatumValue(orFunc, exp);
-        line.wt = getDatumValue(wtFunc, exp);
-        line.lcl = getDatumValue(lclFunc, exp);
-        line.ucl = getDatumValue(uclFunc, exp);
+        drawLine();
         lines.push(line);
 
         // if any of the values is NaN or ±Infinity, disregard this experiment
         if (Number.isNaN(line.or * 0) || Number.isNaN(line.lcl * 0)
               || Number.isNaN(line.ucl * 0) || Number.isNaN(line.wt * 0)
               || line.or == null || line.lcl == null || line.ucl == null || line.wt == null) {
-          delete line.or;
-          delete line.lcl;
-          delete line.ucl;
-          delete line.wt;
+          deleteLine();
         }
       }
     }
@@ -183,6 +195,9 @@ export function getSimpleForestPlotData(graph) {
     return (val - minLcl) * xRatio;
   }
 
+  let lclX = getX(aggregates.lcl);
+  let uclX = getX(aggregates.ucl);
+
   // adjust weights so that in case of very similar weights they don't range from minimum to maximum
   const MIN_WT_SPREAD = 2.5;
   if (maxWt / minWt < MIN_WT_SPREAD) {
@@ -204,8 +219,6 @@ export function getSimpleForestPlotData(graph) {
   }
 
   if (!Number.isNaN(aggregates.or * 0)) {
-    let lclX = getX(aggregates.lcl);
-    let uclX = getX(aggregates.ucl);
     const orX = getX(aggregates.or);
     if ((uclX - lclX) < minDiamondWidth) {
       const ratio = (uclX - lclX) / minDiamondWidth;
@@ -267,27 +280,22 @@ export function getGroupingForestPlotData(graph) {
   const minDiamondWidth = 14;
 
   if (graph.formulaName === 'forestPlotGroupGraph' && isColCompletelyDefined(graph)) {
-    formulaOne();
+    Graph();
   } else
   if (graph.formulaName === 'forestPlotGroupNumberGraph' && isColCompletelyDefined(graph)) {
-    formulaTwo();
+    numberGraph();
   } else
   if (graph.formulaName === 'forestPlotGroupPercentGraph' && isColCompletelyDefined(graph)) {
-    formulaThree();
+    percentGraph();
   } else {
     // this function does not handle this type of graph or the graph is not completely defined
     return;
   }
 
+
+
   // get the data
-  orFunc.formula = window.lima.createFormulaString(orFunc);
-  wtFunc.formula = window.lima.createFormulaString(wtFunc);
-  lclFunc.formula = window.lima.createFormulaString(lclFunc);
-  uclFunc.formula = window.lima.createFormulaString(uclFunc);
-  orFunc.formulaObj = window.lima.getFormulaObject(orFunc.formulaName);
-  wtFunc.formulaObj = window.lima.getFormulaObject(wtFunc.formulaName);
-  lclFunc.formulaObj = window.lima.getFormulaObject(lclFunc.formulaName);
-  uclFunc.formulaObj = window.lima.getFormulaObject(uclFunc.formulaName);
+  getData();
 
   const lines = [];
   const groups = [];
@@ -297,15 +305,7 @@ export function getGroupingForestPlotData(graph) {
       if (!exp.excluded) {
         const line = {};
         line.title = paper.title || 'new paper';
-        if (paper.experiments.length > 1) {
-          let expTitle = exp.title || 'new experiment';
-          if (expTitle.match(/^\d+$/)) expTitle = `Exp. ${expTitle}`;
-          line.title += ` (${expTitle})`;
-        }
-        line.or = getDatumValue(orFunc, exp);
-        line.wt = getDatumValue(wtFunc, exp);
-        line.lcl = getDatumValue(lclFunc, exp);
-        line.ucl = getDatumValue(uclFunc, exp);
+        drawLine();
         line.group = getDatumValue(moderatorParam, exp);
         if (line.group != null && line.group !== '' && groups.indexOf(line.group) === -1) {
           groups.push(line.group);
@@ -322,10 +322,7 @@ export function getGroupingForestPlotData(graph) {
         || line.ucl == null
         || line.wt == null
         ) {
-          delete line.or;
-          delete line.lcl;
-          delete line.ucl;
-          delete line.wt;
+          deleteLine();
         }
 
         lines.push(line);
@@ -567,8 +564,6 @@ export function getGroupingForestPlotData(graph) {
   // put summary into the plot
   if (!Number.isNaN(aggregates.or * 0) && !hasInvalid) {
     currY += 2 * lineHeight;
-    let lclX = getX(aggregates.lcl);
-    let uclX = getX(aggregates.ucl);
     const orX = getX(aggregates.or);
     if ((uclX - lclX) < minDiamondWidth) {
       const ratio = (uclX - lclX) / minDiamondWidth;
@@ -626,7 +621,7 @@ export function getGrapeChartData(graph) {
   const nbGroups = 7;
 
   if (graph.formulaName === 'grapeChartGraph' && isColCompletelyDefined(graph)) {
-    formulaOne();
+    Graph();
   } else
   if (graph.formulaName === 'grapeChartNumberGraph' && isColCompletelyDefined(graph)) {
     orFunc = { formulaName: 'logOddsRatioNumber', formulaParams: dataParams };
@@ -644,14 +639,7 @@ export function getGrapeChartData(graph) {
     return;
   }
 
-  orFunc.formula = window.lima.createFormulaString(orFunc);
-  wtFunc.formula = window.lima.createFormulaString(wtFunc);
-  lclFunc.formula = window.lima.createFormulaString(lclFunc);
-  uclFunc.formula = window.lima.createFormulaString(uclFunc);
-  orFunc.formulaObj = window.lima.getFormulaObject(orFunc.formulaName);
-  wtFunc.formulaObj = window.lima.getFormulaObject(wtFunc.formulaName);
-  lclFunc.formulaObj = window.lima.getFormulaObject(lclFunc.formulaName);
-  uclFunc.formulaObj = window.lima.getFormulaObject(uclFunc.formulaName);
+  getData();
 
   const data = [];
   const groups = [];
@@ -681,10 +669,7 @@ export function getGrapeChartData(graph) {
             || line.lcl == null
             || line.ucl == null
             || line.wt == null) {
-          delete line.or;
-          delete line.lcl;
-          delete line.ucl;
-          delete line.wt;
+          deleteLine();
         }
         data.push(line);
       }
