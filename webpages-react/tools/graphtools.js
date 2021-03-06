@@ -1,5 +1,26 @@
 import { isColCompletelyDefined, getDatumValue, getAggregateDatumValue } from './datatools';
 
+function formulaOne(){
+  orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
+  wtFunc = { formulaName: 'weight', formulaParams };
+  lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
+  uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
+}
+
+function formulaTwo(){
+  orFunc = { formulaName: 'logOddsRatioNumber', formulaParams };
+  wtFunc = { formulaName: 'weightNumber', formulaParams };
+  lclFunc = { formulaName: 'lowerConfidenceLimitNumber', formulaParams };
+  uclFunc = { formulaName: 'upperConfidenceLimitNumber', formulaParams };
+}
+
+function formulaThree(){
+  orFunc = { formulaName: 'logOddsRatioPercent', formulaParams: [formulaParams[0], formulaParams[2]] };
+  wtFunc = { formulaName: 'weightPercent', formulaParams };
+  lclFunc = { formulaName: 'lowerConfidenceLimitPercent', formulaParams };
+  uclFunc = { formulaName: 'upperConfidenceLimitPercent', formulaParams };
+}
+
 export function getSimpleForestPlotData(graph) {
   const { papers } = graph.metaanalysis;
   const { formulaParams } = graph;
@@ -18,22 +39,13 @@ export function getSimpleForestPlotData(graph) {
   const minDiamondWidth = 14;
 
   if (graph.formulaName === 'forestPlotGraph' && isColCompletelyDefined(graph)) {
-    orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
-    wtFunc = { formulaName: 'weight', formulaParams };
-    lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
-    uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
+    formulaOne();
   } else
   if (graph.formulaName === 'forestPlotNumberGraph' && isColCompletelyDefined(graph)) {
-    orFunc = { formulaName: 'logOddsRatioNumber', formulaParams };
-    wtFunc = { formulaName: 'weightNumber', formulaParams };
-    lclFunc = { formulaName: 'lowerConfidenceLimitNumber', formulaParams };
-    uclFunc = { formulaName: 'upperConfidenceLimitNumber', formulaParams };
+    formulaTwo();
   } else
   if (graph.formulaName === 'forestPlotPercentGraph' && isColCompletelyDefined(graph)) {
-    orFunc = { formulaName: 'logOddsRatioPercent', formulaParams: [formulaParams[0], formulaParams[2]] };
-    wtFunc = { formulaName: 'weightPercent', formulaParams };
-    lclFunc = { formulaName: 'lowerConfidenceLimitPercent', formulaParams };
-    uclFunc = { formulaName: 'upperConfidenceLimitPercent', formulaParams };
+    formulaThree();
   } else {
     return;
     // this function does not handle this type of graph or the graph is not completely defined
@@ -255,22 +267,13 @@ export function getGroupingForestPlotData(graph) {
   const minDiamondWidth = 14;
 
   if (graph.formulaName === 'forestPlotGroupGraph' && isColCompletelyDefined(graph)) {
-    orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
-    wtFunc = { formulaName: 'weight', formulaParams };
-    lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
-    uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
+    formulaOne();
   } else
   if (graph.formulaName === 'forestPlotGroupNumberGraph' && isColCompletelyDefined(graph)) {
-    orFunc = { formulaName: 'logOddsRatioNumber', formulaParams };
-    wtFunc = { formulaName: 'weightNumber', formulaParams };
-    lclFunc = { formulaName: 'lowerConfidenceLimitNumber', formulaParams };
-    uclFunc = { formulaName: 'upperConfidenceLimitNumber', formulaParams };
+    formulaTwo();
   } else
   if (graph.formulaName === 'forestPlotGroupPercentGraph' && isColCompletelyDefined(graph)) {
-    orFunc = { formulaName: 'logOddsRatioPercent', formulaParams: [formulaParams[0], formulaParams[2]] };
-    wtFunc = { formulaName: 'weightPercent', formulaParams };
-    lclFunc = { formulaName: 'lowerConfidenceLimitPercent', formulaParams };
-    uclFunc = { formulaName: 'upperConfidenceLimitPercent', formulaParams };
+    formulaThree();
   } else {
     // this function does not handle this type of graph or the graph is not completely defined
     return;
@@ -623,10 +626,7 @@ export function getGrapeChartData(graph) {
   const nbGroups = 7;
 
   if (graph.formulaName === 'grapeChartGraph' && isColCompletelyDefined(graph)) {
-    orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
-    wtFunc = { formulaName: 'weight', formulaParams };
-    lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
-    uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
+    formulaOne();
   } else
   if (graph.formulaName === 'grapeChartNumberGraph' && isColCompletelyDefined(graph)) {
     orFunc = { formulaName: 'logOddsRatioNumber', formulaParams: dataParams };
