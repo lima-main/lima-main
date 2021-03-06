@@ -22,10 +22,19 @@ function percentGraph(){
 }
 
 function deleteLine(){
-  delete line.or;
-  delete line.lcl;
-  delete line.ucl;
-  delete line.wt;
+  if (Number.isNaN(line.or * 0)
+  || Number.isNaN(line.lcl * 0)
+  || Number.isNaN(line.ucl * 0) 
+  || Number.isNaN(line.wt * 0)
+  || line.or == null 
+  || line.lcl == null 
+  || line.ucl == null 
+  || line.wt == null) {
+    delete line.or;
+    delete line.lcl;
+    delete line.ucl;
+    delete line.wt;
+  }
 }
 
 function getData(){
@@ -49,6 +58,21 @@ function drawLine(){
         line.wt = getDatumValue(wtFunc, exp);
         line.lcl = getDatumValue(lclFunc, exp);
         line.ucl = getDatumValue(uclFunc, exp);
+}
+
+function grouping(){
+  const perGroup = {};
+  for (const dataGroup of dataGroups) {
+    const { group } = dataGroup.data[0];
+    perGroup[group] = {};
+    perGroup[group].wt = dataGroup.data.reduce((acc, line) => (
+      line.wt != null ? acc + line.wt : acc
+    ), 0);
+    if (perGroup[group].wt === 0) perGroup[group].wt = 1;
+    perGroup[group].or = dataGroup.data.reduce((acc, line) => (
+      line.wt !== null ? acc + line.or * line.wt : acc
+    ), 0) / perGroup[group].wt;
+  }
 }
 
 export function getSimpleForestPlotData(graph) {
@@ -95,11 +119,7 @@ export function getSimpleForestPlotData(graph) {
         lines.push(line);
 
         // if any of the values is NaN or ±Infinity, disregard this experiment
-        if (Number.isNaN(line.or * 0) || Number.isNaN(line.lcl * 0)
-              || Number.isNaN(line.ucl * 0) || Number.isNaN(line.wt * 0)
-              || line.or == null || line.lcl == null || line.ucl == null || line.wt == null) {
-          deleteLine();
-        }
+        deleteLine();
       }
     }
   }
@@ -292,8 +312,6 @@ export function getGroupingForestPlotData(graph) {
     return;
   }
 
-
-
   // get the data
   getData();
 
@@ -312,18 +330,7 @@ export function getGroupingForestPlotData(graph) {
         }
 
         // if any of the values is NaN or ±Infinity, disregard this experiment
-        if (
-          Number.isNaN(line.or * 0)
-        || Number.isNaN(line.lcl * 0)
-        || Number.isNaN(line.ucl * 0)
-        || Number.isNaN(line.wt * 0)
-        || line.or == null
-        || line.lcl == null
-        || line.ucl == null
-        || line.wt == null
-        ) {
-          deleteLine();
-        }
+        deleteLine();
 
         lines.push(line);
       }
@@ -364,18 +371,8 @@ export function getGroupingForestPlotData(graph) {
     dataGroups.push(dataGroup);
   }
 
-  const perGroup = {};
-  for (const dataGroup of dataGroups) {
-    const { group } = dataGroup.lines[0];
-    perGroup[group] = {};
-    perGroup[group].wt = dataGroup.lines.reduce((acc, line) => (
-      line.wt !== null ? acc + line.wt : acc
-    ), 0);
-    if (perGroup[group].wt === 0) perGroup[group].wt = 1;
-    perGroup[group].or = dataGroup.lines.reduce((acc, line) => (
-      line.wt !== null ? acc + line.or * line.wt : acc
-    ), 0) / perGroup[group].wt;
-  }
+  grouping();
+  
   const orAggrFunc = {
     formulaName: 'weightedMeanAggr',
     formulaParams: [orFunc, wtFunc],
@@ -661,16 +658,9 @@ export function getGrapeChartData(graph) {
         if (line.group != null && line.group !== '' && groups.indexOf(line.group) === -1) {
           groups.push(line.group);
         }
-        if (Number.isNaN(line.or * 0)
-            || Number.isNaN(line.lcl * 0)
-            || Number.isNaN(line.ucl * 0)
-            || Number.isNaN(line.wt * 0)
-            || line.or == null
-            || line.lcl == null
-            || line.ucl == null
-            || line.wt == null) {
-          deleteLine();
-        }
+        
+        deleteLine();
+
         data.push(line);
       }
     }
