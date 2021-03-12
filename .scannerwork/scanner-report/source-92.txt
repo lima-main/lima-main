@@ -1,0 +1,47 @@
+<!doctype html>
+<title>User Profile | Living Meta-Analysis</title>
+<script src="/lib/promise.js"></script>
+<script src="/lib/fetch.js"></script>
+<script src="https://apis.google.com/js/platform.js"></script>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+
+redirecting...
+
+<script src="/js/tools.js"></script>
+<script src="/js/auth.js"></script>
+
+<script>
+window.lima.initPage = function initPage() {
+  'use strict';
+  var lima = window.lima;
+  var _ = lima._;  // underscore symbol is used for brevity, defined in tools.js
+
+  // redirect to the user's profile
+
+  var user = lima.getAuthenticatedUserEmail();
+
+  if (user) {
+    lima.getGapiIDToken()
+    .then(function (idToken) {
+      return fetch('/api/profile/' + user, {
+        method: 'GET',
+        headers: lima._.idTokenToFetchHeaders(idToken),
+      });
+    })
+    .then(_.fetchJson)
+    .then(function(userProfile) {
+      var userid = userProfile.username || user;
+      window.history.replaceState({}, "profile", '/' + userid +'/');
+      window.location.href = '/' + userid +'/';
+    })
+    .catch(function(err) {
+      _.apiFail();
+    });
+  } else {
+    window.history.replaceState({}, "local", '/local');
+    window.location.href = '/local';
+  }
+
+}
+</script>

@@ -1,0 +1,1419 @@
+<!doctype html>
+<title>LiMA Meta-Analysis | Living Meta-Analysis</title>
+<script src="/lib/promise.js"></script>
+<script src="/lib/fetch.js"></script>
+<script src="/lib/math.min.js"></script>
+<script src="https://apis.google.com/js/platform.js"></script>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/tabs.css">
+<link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+
+<!-- Do not send referrer, so Links are followed directly -->
+<meta name="referrer" content="no-referrer">
+
+<body class="loading">
+
+<header>
+  <a href="/" id="logo-box">
+    <h1>LiMA</h1><h2>Living Meta-Analysis</h2>
+  </a>
+
+  <!-- this puts a sign-in button, and a sign-out link, in the page -->
+  <div class="userinfo signedoff">
+    <img src="/img/user.png" alt="user photo or icon" class="userphoto">
+    <div class="actions">
+      <div class="name when-signed-on">Signed in as: <span class="username"></span></div>
+      <div class="g-signin2 signin when-signed-out"></div>
+      <a href="/profile" class="profile when-signed-on">Profile</a>
+      <a id="toggle-editing" class="only-if-page-about-you">Turn editing <span class="ifon">off</span><span class="ifoff">on</span></a>
+      <a class="signout when-signed-on">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<p class="loadingspinner">loading&hellip;</p>
+
+<template id="metaanalysis-template">
+  <section id="metaanalysis" class="validationroot">
+
+    <header>
+    <!-- <div class="popupbox default editing">
+      <header><h1>LiMA Meta-Analysis</h1></header>
+      <p>A Meta-Analysis in LiMA is a collection of Papers, usually corresponding to multiple journals
+        or conference publications, maybe supported by data from online appendices, accompanying reports or so.
+      <p>Each Paper contains studies or experiments, and together the Papers that make up a Meta-Analysis
+        share a common theme. In the description, please elaborate on the Meta-Analysis itself, and not each
+        Paper in turn. Information for each Paper can be stored/accessed on the page for that Paper.
+      <p>For example, a Meta-Analysis may include on four Papers; Each Paper could contain two experiments.
+        In LiMA this would translate to eight rows (1 for each experiment) and the collective set of columns.
+    </div> -->
+      <h1>Meta-analysis: </h1>
+      <h1 class="title notediting"></h1>
+      <h1 class="title editing oneline" contenteditable placeholder="enter a short name"></h1>
+      <button class="titlerename editing" disabled>rename</button>
+      <!-- rename and change type warnings should only show up if the server confirms
+           that there are actually other users of the thing (paper, column) -->
+      <div class="titlerenamewarning">
+        <h1>Are you sure to rename the meta-analysis from <span class="title"></span>?</h1>
+        <p>If others are using the meta-analysis, a change of the short name might surprise them.
+          To undo, press <button class="titlerenamecancel">cancel</button>
+        </p>
+      </div>
+      <ul class="tags"></ul>
+      <!-- todo there could be an animated gif on the next line that is a spinner that takes just over 3s to go to full, and we reset it on every deferSave -->
+      <span class="localsaving">Your changes are saved locally on this computer.</span>
+      <span class="savepending">will be saved soon&hellip;</span>
+      <span class="saving">saving&hellip;</span>
+      <span class="savingerror" title="Sorry, something unexpected happened. Error details might be available in the browser console. Click here to try saving again.">saving error!</span>
+      <span class="validationerrormessage notunpin editing" title="click here to go to the first highlighted field">please correct fields highlighted below</span>
+      <span class="unsavedmessage notunpin editing" title="click here to go to the first unconfirmed value">some value(s) need confirmation to be saved</span>
+      <a class="edityourcopy" href="#">Edit your copy</a>
+    </header>
+    <!-- <p class="authors">Authors:
+      <span class="value notediting">error</span>
+      <span class="value editing oneline" contenteditable placeholder="enter the authors">error</span>
+    </p> -->
+
+    <div id="tabbar">
+      <button class="tablinks" data-tab="infoTab"  >Info</button>
+      <button class="tablinks" data-tab="matTab"   >Meta-analysis Table</button>
+      <button class="tablinks" data-tab="plotsTab" >Meta-analysis Plots</button>
+      <button class="tablinks" data-tab="graphsTab">Plot definitions</button>
+      <button class="tablinks" data-tab="aggTab"   >Meta-analysis Aggregates</button>
+    </div>
+
+    <div id="infoTab" class="tabcontent">
+      <div class="published popupboxtrigger">
+        <div class="edithighlight">
+          <span class="popupboxhighlight" data-focuses=".value.editing">Reference:</span>
+          <span class="value notediting">error</span>
+          <span class="value editing oneline" contenteditable placeholder="authors, year, title, journal etc.">error</span>
+        </div>
+        <div class="popupbox editing" data-boxid='reference'>
+          <div class="pin"></div>
+          <header><p>Reference</p></header>
+          <p class="description">Details of where this Meta-analysis has been published (if anywhere). Should include authors, year, title, and all the usual bibliographic information.</p>
+          <!-- todo comments -->
+        </div>
+      </div>
+      <p class="description edithighlight">
+        <span data-focuses=".value.editing">Description: </span>
+        <span class="value notediting">error</span>
+        <span class="value editing" contenteditable placeholder="add description">error</span>
+      </p>
+  </div>
+
+    <!-- todo show "other contributors" or "forks" or "clones" ... -->
+    <!-- todo show meta-analyses that use this paper -->
+    <!-- todo show history -->
+    <!-- when not editing, show something for empty doi and link (or nothing at all?) -->
+    <!-- todo comments -->
+
+    <div id="matTab" class="tabcontent">
+      <div class="experiments"></div>
+    </div>
+    <div id="plotsTab" class="tabcontent">
+      <div class="plots"></div>
+    </div>
+    <div id="graphsTab" class="tabcontent">
+      <div class="graphs"></div>
+    </div>
+    <div id="aggTab" class="tabcontent">
+      <div class="aggregates"></div>
+    </div>
+
+    <p class='no-table'>No data has been entered for this meta-analysis yet.
+      <span class="only-if-page-about-you">Turn editing on to add data.</span><!-- todo instruction to clone the paper? --></p>
+    <p>Entered <span class="enteredby if-not-yours-or-page-not-about-you needs-owner"> by <a class="value" href="error">error</a></span><span class="ctime"> on <span class="value date">error</span></span></p>
+    <p class="mtime">Last modified: <span class="value date">error</span></p>
+  </section>
+</template>
+<template id="tag-template"><li><span class="tag">error</span><span class="removetag editing">&times;</span></li></template>
+<template id="new-tag-template"><li class="new"><span class="tag" contenteditable></span></li><li class="addtag editing"><span class="notempty tag">+</span><span class="empty tag"> add tags</span></li></template>
+<template id="experiments-table-template">
+  <table class="experiments">
+    <tbody>
+      <tr>
+        <th class="popupboxtrigger">
+          <div class="popupboxhighlight">
+            <span>Paper</span>
+          </div>
+          <div class="fullcolinfo popupbox" data-boxid='studyexperimentheading'>
+            <div class="pin"></div>
+            <header><p>Paper</p></header>
+            <p class="description">The Paper an experiment comes from.</p>
+            <!-- todo comments -->
+          </div>
+        </th>
+        <th class="popupboxtrigger experimenttitle">
+          <div class="popupboxhighlight">
+            <span>Study/Experiment</span>
+          </div>
+          <div class="fullcolinfo popupbox" data-boxid='studyexperimentheading'>
+            <div class="pin"></div>
+            <header><p>Study/Experiment</p></header>
+            <p class="description">A row can be a study, an experiment, or a condition within an experiment.</p>
+            <!-- todo comments -->
+          </div>
+        </th>
+        <th class="add">
+          <div class="unhide editing">&#x25C4; &#x25BA;</div>
+          <div><span>
+            <button class="add notunpin not-unsaved">add a column</button>
+            <button class="when-unsaved" disabled title="can't add a column when some changes are unsaved">add a column</button>
+            <button class="oneclick notunpin not-unsaved">meta-analysis</button>
+            <button class="when-unsaved" disabled title="can't add meta-analysis when some changes are unsaved">meta-analysis</button>
+          </span></div>
+          <div class="newcolumn popupboxtrigger">
+            <div class="addcolumnbox">
+              <button class="addnew">new data column</button>
+              <button class="addcomp">new computed column</button>
+              <button class="cancel">cancel</button>
+            </div>
+          </div>
+          <div class="oneclick popupboxtrigger">
+            <div class="oneclickmetabox loading">
+              <header>
+                <h1>Specify all the following parameters:</h1>
+              </header>
+              <div class="oneclickcontainer">
+                <!-- gets populated in the code -->
+              </div>
+              <footer>
+                <button class="addoneclick">generate</button>
+                <button class="cancel">cancel</button>
+              </footer>
+            </div>
+          </div>
+        </th>
+      </tr>
+      <tr class="add">
+        <th><button class="add notunpin not-unsaved">add a paper</button>
+            <button class="when-unsaved" disabled title="can't add a paper when some changes are unsaved">add a paper</button></th>
+        <td></td>
+        <td class='no-data'>
+          <span class="no-columns no-papers">no data, begin by adding papers and columns</span>
+          <span class="no-columns          ">add some columns</span>
+          <span class="           no-papers">add a paper</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</template>
+<template id="col-heading-template">
+  <th class="popupboxtrigger">
+    <div class="unhide editing">&#x25C4; &#x25BA;</div>
+    <div class="popupboxhighlight">
+      <span class="coltitle">error</span>
+    </div>
+    <div class="fullcolinfo popupbox" data-boxtype='fullcolinfo'>
+      <div class="pin"></div>
+      <button class="not-unsaved move left most editing" title="move column to the left">|«</button>
+      <button class="not-unsaved move left editing" title="move column to the left">«</button>
+      <button class="not-unsaved hide editing">hide</button>
+      <button class="not-unsaved move right editing" title="move column to the right">»</button>
+      <button class="not-unsaved move right most editing" title="move column to the right">»|</button>
+      <button class="when-unsaved editing" disabled title="can't move columns when some changes are unsaved">|«</button>
+      <button class="when-unsaved editing" disabled title="can't move columns when some changes are unsaved">«</button>
+      <button class="when-unsaved editing" disabled title="can't hide columns when some changes are unsaved">hide</button>
+      <button class="when-unsaved editing" disabled title="can't move columns when some changes are unsaved">»</button>
+      <button class="when-unsaved editing" disabled title="can't move columns when some changes are unsaved">»|</button>
+      <header>
+        <p class="coltitle notediting">error</p>
+        <p class="coltitle editing oneline" contenteditable placeholder="enter a column title">error</p>
+        <button class="coltitlerename editing" disabled>rename</button>
+      </header>
+      <p class="coldescription notediting">error</p>
+      <p class="coldescription editing" contenteditable placeholder="add column description">error</p>
+      <!-- todo comments -->
+      <!-- todo add a way of cloning a column -->
+    </div>
+  </th>
+</template>
+<template id="computed-col-heading-template">
+  <th class="popupboxtrigger">
+    <div class="unhide editing">&#x25C4; &#x25BA;</div>
+    <div class="popupboxhighlight">
+      <span class="richlabel">error</span>
+    </div>
+    <div class="fullcolinfo computed popupbox" data-boxtype='fullcolinfo'>
+      <div class="pin"></div>
+      <button class="not-unsaved move left most editing" title="move column to the left">|«</button>
+      <button class="not-unsaved move left editing" title="move column to the left">«</button>
+      <button class="not-unsaved delete editing">delete</button>
+      <button class="not-unsaved move right editing" title="move column to the right">»</button>
+      <button class="not-unsaved move right most editing" title="move column to the right">»|</button>
+      <button class="when-unsaved" disabled title="can't move columns when some changes are unsaved">|«</button>
+      <button class="when-unsaved" disabled title="can't move columns when some changes are unsaved">«</button>
+      <button class="when-unsaved" disabled title="can't delete columns when some changes are unsaved">delete</button>
+      <button class="when-unsaved" disabled title="can't move columns when some changes are unsaved">»</button>
+      <button class="when-unsaved" disabled title="can't move columns when some changes are unsaved">»|</button>
+      <header>
+        <p class="customcolname">
+          <span class="customcolname" placeholder="optional custom name" contenteditable></span>
+        </p>
+        <p>
+          <span class="fulllabel">error</span>
+        </p>
+        <div class="colcomputedcolumns">
+          <select class="colformulas editing validationerror">
+            <option value=''>Select formula</option>
+            <!-- gets populated in the code -->
+          </select>
+          <div class="dropdownselection editing">
+            <!-- gets populated in the code -->
+          </div>
+        </div>
+        <!-- todo add a way of cloning a column -->
+      </header>
+    </div>
+  </th>
+</template>
+<template id="experiment-row-template">
+  <tr class="row">
+    <th class="popupboxtrigger popupboxhighlight papertitle">
+      <!-- todo click on title or exptitle should focus the contenteditable exptitle -->
+      <div><span class="paptitle"></span><input type="checkbox" class="exclude" checked></div>
+      <div class="paperinfo popupbox" data-boxtype='paperinfo'>
+        <div class="pin"></div>
+        <header>
+          <span class="edithighlight" data-focuses=".paptitle.editing">Paper:
+            <span class="paptitle notediting"></span></span
+          ><p class="paptitle editing oneline" contenteditable placeholder="enter a short name"></p>
+          <button class="paptitlerename editing" disabled>rename</button>
+          <div class="paprenamewarning">
+            <h1>Are you sure to rename the Paper from "<span class="paptitle"></span>"?</h1>
+            <p>If others are using the paper, a change might surprise them.
+              To undo, press <button class="paprenamecancel">cancel</button>
+            </p>
+            <p>Good short names have authors and year, e.g. Jones04, JonesSmyth04, JonesEtAl04, Jones04a and so on.</p>
+          </div>
+          <ul class="tags"></ul>
+        </header>
+        <p>Entered <span class="papenteredby only-not-yours needs-owner"> by <a class="value" href="error">error</a></span><span class="papctime"> on <span class="value date">error</span></span></p>
+        <!-- <p class="authors">Authors:
+          <span class="value notediting">error</span>
+          <span class="value editing oneline" contenteditable placeholder="enter the authors">error</span>
+        </p> -->
+        <div class="papreference">
+          <div class="edithighlight">
+            <span data-focuses=".value.editing">Reference:</span>
+            <span class="value notediting">error</span>
+            <span class="value editing oneline" contenteditable placeholder="authors, year, title, journal etc.">error</span>
+          </div>
+        </div>
+        <p class="papdescription edithighlight">
+          <span data-focuses=".value.editing">Description: </span>
+          <span class="value notediting">error</span>
+          <span class="value editing" contenteditable placeholder="add description">error</span>
+        </p>
+        <p class="paplink linkedit edithighlight">
+          <span data-focuses=".value.editing">Link: </span>
+          <a class="value notediting" href="error">error</a>
+          <span class="value editing" contenteditable placeholder="url">error</span>
+          <button class="test editing" title="opens the link in a new window">test</button>
+          <button class="confirm editing">confirm</button>
+          <button class="cancel editing">cancel</button>
+        </p>
+        <p class="papdoi linkedit edithighlight">
+          <span data-focuses=".value.editing">DOI: </span>
+          <a class="value notediting" href="error" data-base="https://dx.doi.org/">error</a>
+          <span class="value editing" contenteditable placeholder="doi">error</span>
+          <button class="test editing" title="opens the link in a new window">test</button>
+          <button class="confirm editing">confirm</button>
+          <button class="cancel editing">cancel</button>
+        </p>
+        <p class="papmtime">Last modified: <span class="value date">error</span></p>
+      </div>
+      <!-- todo make this smaller and ellipsized, and fill it -->
+      <div class="paperdescription short" data-focuses=".paperdescription.editing"></div>
+      <!-- todo comments -->
+      <button class="unhideexp" hidden>unhide</button>
+      <button class="add not-unsaved" title="add an experiment">+</button>
+      <button class="when-unsaved" disabled title="can't add a row when some changes are unsaved">add a row</button>
+    </th>
+    <th class="popupboxtrigger popupboxhighlight experimenttitle">
+      <!-- todo click on title or exptitle should focus the contenteditable exptitle -->
+      <div><span class="exptitle"></span><input type="checkbox" class="exclude" checked></div>
+      <div class="experimentinfo popupbox" data-boxtype='experimentinfo'>
+        <div class="pin"></div>
+        <button class="hideexp">hide</button>
+        <header>
+          <p class="papertitle">Paper: <span class="paptitle"></span></p>
+          <p><span class="edithighlight" data-focuses=".exptitle.editing">Study/experiment:
+            <span class="exptitle notediting"></span></span
+          ><span class="exptitle editing oneline" contenteditable placeholder="enter a short name"></span>
+          <button class="exptitlerename editing" disabled>rename</button>
+          <div class="exprenamewarning">
+            <h1>Are you sure to rename the experiment from "<span class="exptitle"></span>"?</h1>
+            <p>If others are using the paper, a change of an experiment name might surprise them.
+              To undo, press <button class="exprenamecancel">cancel</button>
+            </p>
+          </div>
+        </header>
+        <!-- todo click on .exdescription.short should focus the contenteditable exptitle -->
+        <div class="expdescription notediting"></div>
+        <div class="expdescription editing" contenteditable placeholder="enter description"></div>
+      </div>
+      <div class="expdescription short" data-focuses=".expdescription.editing"></div>
+      <!-- todo comments -->
+      <!-- todo show ctime and enteredBy for experiment -->
+    </th>
+  </tr>
+</template>
+<template id="experiment-datum-template">
+  <td class="datum popupboxtrigger popupboxhighlight">
+    <span class="value notcomputed notediting"></span>
+    <span class="value computed"></span>
+    <span class="value notcomputed editing oneline" contenteditable></span>
+    <div class="datum popupbox" data-boxtype='datumpopupbox'>
+      <div class="pin"></div>
+      <header>
+        <p class="fullvalue" placeholder="no value"></p>
+        <p class="computed">
+          calculated as
+          <span class="formula"></span>
+        </p>
+        <p class="by notcomputed">
+          entered on
+          <span class="valctime date">error</span>
+          by
+          <a class="valenteredby" href="error">error</a>
+        </p>
+        <p class="changewarning notcomputed editing">
+          When updating an existing value, consider leaving a comment justifying the change.
+        </p>
+        <p class="notcomputed"><span class="commentcount"></span> comment(s):</p>
+      </header>
+      <main class="notcomputed"><!-- this is where the comments will come --></main>
+      <div class="comment new when-signed-on notcomputed">
+        <header>
+          new comment:
+        </header>
+        <p>
+          <span class="text" contenteditable placeholder="enter a new comment"></span>
+          <span class="buttons">
+            <button class="cancel">cancel</button>
+            <button class="add confirm" disabled>add comment</button>
+          </span>
+        </p>
+      </div>
+    </div>
+  </td>
+</template>
+<template id="aggregates-table-template">
+  <table class="aggregates">
+    <tbody>
+      <tr>
+        <th colspan=2>
+          Aggregates:
+        </th>
+      </tr>
+      <tr class="add">
+        <th colspan=2>
+          <button class="add notunpin not-unsaved">add an aggregate</button>
+          <button class="when-unsaved" disabled title="can't add an aggregate when some changes are unsaved">add an aggregate</button></th>
+      </tr>
+    </tbody>
+  </table>
+</template>
+<template id="aggregate-row-template">
+  <tr class="popupboxtrigger">
+    <th class="popupboxhighlight">
+      <span class="richlabel">error</span>:
+      <!-- todo click on any of the above should focus the value for editing and pin its popup box -->
+    </th>
+    <td class="datum popupboxhighlight">
+      <span class="value aggregated">error</span>
+      <div class="datum popupbox" data-boxtype='aggregatepopupbox'>
+        <div class="pin"></div>
+        <button class="not-unsaved move up most editing" title="move aggregate up"><span>|«</span></button>
+        <button class="not-unsaved move up editing" title="move aggregate up"><span>«</span></button>
+        <button class="not-unsaved delete editing">delete</button>
+        <button class="not-unsaved move down editing" title="move aggregate down"><span>»</span></button>
+        <button class="not-unsaved move down most editing" title="move aggregate down"><span>»|</span></button>
+        <button class="when-unsaved up    " disabled title="can't move aggregate when some changes are unsaved"><span>|«</span></button>
+        <button class="when-unsaved up    " disabled title="can't move aggregate when some changes are unsaved"><span>«</span></button>
+        <button class="when-unsaved delete" disabled title="can't delete aggregate when some changes are unsaved">delete</button>
+        <button class="when-unsaved down  " disabled title="can't move aggregate when some changes are unsaved"><span>»</span></button>
+        <button class="when-unsaved down  " disabled title="can't move aggregate when some changes are unsaved"><span>»|</span></button>
+        <header>
+          <p class="fullvalue" placeholder="no value">error</p>
+          <div class="aggregated">
+            <p class="customaggrname">
+              <span class="customaggrname" placeholder="optional custom name" contenteditable></span>
+            </p>
+            <p>
+              <span class="fulllabel">error</span>
+            </p>
+            <select class="aggregateformulas editing validationerror">
+              <option value=''>Select formula</option>
+              <!-- gets populated in the code -->
+            </select>
+            <div class="dropdownselection editing">
+              <!-- gets populated in the code -->
+            </div>
+          </div>
+          <p><span class="commentcount"></span> comment(s):</p>
+        </header>
+        <main><!-- this is where the comments will come --></main>
+        <div class="comment new when-signed-on">
+          <header>
+            new comment:
+          </header>
+          <p>
+            <span class="text" contenteditable placeholder="enter a new comment"></span>
+            <span class="buttons">
+              <button class="cancel">cancel</button>
+              <button class="add confirm" disabled>add comment</button>
+            </span>
+          </p>
+        </div>
+      </div>
+    </td>
+  </tr>
+</template>
+<!-- todo fix popup boxes for grouping aggregates -->
+<template id="grouping-aggregates-table-template">
+  <table class="grouping aggregates">
+    <tbody>
+      <tr>
+        <th class="spanning">
+          Aggregates grouped by: <span class="groupcolumnlabel notediting"></span
+                      ><span class="groupcolumnlabel editing when-unsaved" title="can't change the grouping column when some changes are unsaved">none</span
+                      ><select class="groupcolumnselection editing ">
+            <!-- gets populated in the code for each available column in the data -->
+          </select>
+        </th>
+      </tr>
+      <tr class="groupheadings">
+        <th>Groups:</th>
+      </tr>
+      <tr class="add">
+        <th class="spanning">
+          <button class="add notunpin not-unsaved">add a grouping aggregate</button>
+          <button class="when-unsaved" disabled title="can't add a grouping aggregate when some changes are unsaved">add a grouping aggregate</button></th>
+        </th>
+      </tr>
+    </tbody>
+  </table>
+</template>
+<template id="grouping-aggregate-heading-template">
+  <th>
+    <span class="grouptitle">error</span>
+  </th>
+</template>
+<template id="grouping-aggregate-row-template">
+  <tr>
+    <th class="popupboxhighlight popupboxtrigger">
+      <span class="richlabel suppressgrouping">error</span>
+      <div class="popupbox" data-boxtype="groupingaggregatepopupbox">
+        <div class="pin"></div>
+        <button class="not-unsaved move up most editing" title="move grouping aggregate up"><span>|«</span></button>
+        <button class="not-unsaved move up editing" title="move grouping aggregate up"><span>«</span></button>
+        <button class="not-unsaved delete editing">delete</button>
+        <button class="not-unsaved move down editing" title="move grouping aggregate down"><span>»</span></button>
+        <button class="not-unsaved move down most editing" title="move grouping aggregate down"><span>»|</span></button>
+        <button class="when-unsaved up    " disabled title="can't move grouping aggregate when some changes are unsaved"><span>|«</span></button>
+        <button class="when-unsaved up    " disabled title="can't move grouping aggregate when some changes are unsaved"><span>«</span></button>
+        <button class="when-unsaved delete" disabled title="can't delete grouping aggregate when some changes are unsaved">delete</button>
+        <button class="when-unsaved down  " disabled title="can't move grouping aggregate when some changes are unsaved"><span>»</span></button>
+        <button class="when-unsaved down  " disabled title="can't move grouping aggregate when some changes are unsaved"><span>»|</span></button>
+        <header>
+          <div class="aggregated">
+            <p class="customgroupingaggrname">
+              <span class="customgroupingaggrname" placeholder="optional custom name" contenteditable></span>
+            </p>
+            <p>
+              <span class="fulllabel">error</span>
+            </p>
+            <select class="groupingaggregateformulas editing validationerror">
+              <option value=''>Select formula</option>
+              <!-- gets populated in the code -->
+            </select>
+            <div class="dropdownselection editing">
+              <!-- gets populated in the code -->
+            </div>
+          </div>
+          <p><span class="commentcount"></span> comment(s):</p>
+        </header>
+        <main><!-- this is where the comments will come --></main>
+        <div class="comment new when-signed-on">
+          <header>
+            new comment:
+          </header>
+          <p>
+            <span class="text" contenteditable placeholder="enter a new comment"></span>
+            <span class="buttons">
+              <button class="cancel">cancel</button>
+              <button class="add confirm" disabled>add comment</button>
+            </span>
+          </p>
+        </div>
+      </div>
+      <!-- todo click on any of the above should focus the value for editing and pin its popup box -->
+    </th>
+    <!-- this will contain instances of the grouping-aggregate-datum-template -->
+  </tr>
+</template>
+<template id="grouping-aggregate-datum-template">
+  <td class="datum popupboxtrigger popupboxhighlight">
+    <span class="value aggregated">error</span>
+    <div class="datum popupbox" data-boxtype='datumpopupbox'>
+      <header>
+        <p class="fullvalue" placeholder="no value"></p>
+        <p>
+          calculated for the <span class="group"></span> group as
+          <span class="fulllabel suppressgrouping"></span>
+      </header>
+    </div>
+  </td>
+</template>
+<template id="graphs-table-template">
+  <table class="graphs">
+    <tbody>
+      <tr>
+        <th>
+          Graphs:
+        </th>
+      </tr>
+      <tr class="add">
+        <th>
+          <button class="add notunpin not-unsaved">add a graph</button>
+          <button class="when-unsaved" disabled title="can't add a graph when some changes are unsaved">add a graph</button></th>
+      </tr>
+    </tbody>
+  </table>
+</template>
+<template id="graph-row-template">
+  <tr class="popupboxtrigger">
+    <th class="popupboxhighlight">
+      <span class="richlabel">error</span>
+      <!-- todo click on any of the above should focus the value for editing and pin its popup box -->
+    </th>
+    <!-- todo move the popupbox to the TH above -->
+    <td class="datum popupboxhighlight">
+      <div class="datum popupbox" data-boxtype='graphpopupbox'>
+        <div class="pin"></div>
+        <button class="not-unsaved move up most editing" title="move graph up"><span>|«</span></button>
+        <button class="not-unsaved move up editing" title="move graph up"><span>«</span></button>
+        <button class="not-unsaved delete editing">delete</button>
+        <button class="not-unsaved move down editing" title="move graph down"><span>»</span></button>
+        <button class="not-unsaved move down most editing" title="move graph down"><span>»|</span></button>
+        <button class="when-unsaved up    " disabled title="can't move graph when some changes are unsaved"><span>|«</span></button>
+        <button class="when-unsaved up    " disabled title="can't move graph when some changes are unsaved"><span>«</span></button>
+        <button class="when-unsaved delete" disabled title="can't delete graph when some changes are unsaved">delete</button>
+        <button class="when-unsaved down  " disabled title="can't move graph when some changes are unsaved"><span>»</span></button>
+        <button class="when-unsaved down  " disabled title="can't move graph when some changes are unsaved"><span>»|</span></button>
+        <header>
+          <div class="graphed">
+            <p class="customgraphname">
+              <span class="customgraphname" placeholder="optional custom name" contenteditable></span>
+            </p>
+            <p>
+              <span class="fulllabel">error</span>
+            </p>
+            <select class="graphformulas editing validationerror">
+              <option value=''>Select formula</option>
+              <!-- gets populated in the code -->
+            </select>
+            <div class="dropdownselection editing">
+              <!-- gets populated in the code -->
+            </div>
+          </div>
+          <p><span class="commentcount"></span> comment(s):</p>
+        </header>
+        <main><!-- this is where the comments will come --></main>
+        <div class="comment new when-signed-on">
+          <header>
+            new comment:
+          </header>
+          <p>
+            <span class="text" contenteditable placeholder="enter a new comment"></span>
+            <span class="buttons">
+              <button class="cancel">cancel</button>
+              <button class="add confirm" disabled>add comment</button>
+            </span>
+          </p>
+        </div>
+      </div>
+    </td>
+  </tr>
+</template>
+<template id="comment-template">
+  <div class="comment">
+    <header>
+      <button data-focuses='.comment .text' class="edit-button only-if-yours needs-owner">edit</button>
+      #<span class="commentnumber"></span>: <a class="by" href="error">error</a> wrote on <span class="ctime date"></span>
+    </header>
+    <p><span class="text only-if-yours needs-owner" contenteditable placeholder="enter your comment"></span></p>
+    <p><span class="text only-not-yours needs-owner"></span></p>
+  </div>
+</template>
+<template id="forest-plot-template">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    class="forestplot"
+    width="800"
+    height="200"
+    version="1.1"
+    data-line-height="30"
+    data-padding="10"
+    data-graph-width="300"
+    data-start-height="70"
+    data-end-height="65"
+    data-min-wt-size="4"
+    data-max-wt-size="14"
+    data-extra-line-len="-30"
+    data-min-diamond-width="14"
+    >
+    <style>
+      /* stylelint-disable no-descending-specificity */
+
+      svg.forestplot {
+        stroke-width: 2px;
+        fill: white;
+        stroke: black;
+        stroke-linecap: butt;
+        stroke-linejoin: miter;
+        font-size: 14px;
+        font-family: "Arial", sans-serif;
+      }
+
+      svg.forestplot text {
+        stroke-width: 0;
+        fill: black;
+        text-anchor: middle;
+      }
+
+      svg.forestplot .title {
+        font-size: 20px;
+        text-anchor: start;
+      }
+
+      svg.forestplot .headings {
+        transform: translate(10px, 30px);
+      }
+
+      svg.forestplot .headings text.or.lcl.ucl,
+      svg.forestplot .experiment text.or.lcl.ucl,
+      svg.forestplot .summary text.or.lcl.ucl {
+        transform: translate(610px, 20px);
+      }
+
+      svg.forestplot .headings text.wt,
+      svg.forestplot .experiment text.wt,
+      svg.forestplot .summary text.wt {
+        transform: translate(790px, 20px);
+        text-anchor: end;
+      }
+
+      svg.forestplot .experiment .expname {
+        text-anchor: start;
+        transform: translate(0, 20px);
+      }
+
+      svg.forestplot .experiment.invalid text {
+        fill: #a44;
+      }
+
+      svg.forestplot .experiment.invalid text.lcl,
+      svg.forestplot .experiment.invalid text.ucl,
+      svg.forestplot .experiment.invalid text.wt {
+        display: none;
+      }
+
+      svg.forestplot .experiment .rowgraph {
+        transform: translate(280px, 0);
+      }
+
+      svg.forestplot .experiment .rowgraph .confidenceinterval {
+        transform: translate(0, 15px);
+      }
+
+      svg.forestplot .experiment .rowgraph .weightbox {
+        transform: translate(0, 15px);
+        fill: black;
+      }
+
+      svg.forestplot .summary > g {
+        transform: translate(0, 20px);
+      }
+
+      svg.forestplot .summary .sumname {
+        text-anchor: start;
+        transform: translate(0, 20px);
+      }
+
+      svg.forestplot .summary .sumgraph {
+        transform: translate(280px, 0);
+      }
+
+      svg.forestplot .summary .sumgraph .confidenceinterval {
+        transform: translate(0, 15px);
+      }
+
+      svg.forestplot .summary .guideline {
+        stroke-width: 1px;
+        transform: translate(280px, 42.5px) scale(1, -1);
+        stroke-dasharray: 5px;
+        stroke-linecap: butt;
+      }
+
+      svg.forestplot .axes > g {
+        transform: translate(280px, 32.5px);
+      }
+
+      svg.forestplot .axes .tick text {
+        font-size: 11px;
+        transform: translate(0, 19px);
+      }
+
+      svg.forestplot .axes .yaxis {
+        transform: translate(0, 1px) scale(1, -1);
+      }
+
+      svg.forestplot .positioningbutton {
+        transform: translate(495px, 17px);
+        opacity: 0.2;
+      }
+
+      svg.forestplot .positioningbutton:not(:hover) line {
+        display: none;
+      }
+
+      svg.forestplot .positioningbutton:hover {
+        opacity: 1;
+        cursor: pointer;
+      }
+
+      svg.forestplot .positioningbutton line {
+        stroke-width: 1.5px;
+      }
+    </style>
+
+    <g class="headings">
+      <text class="or lcl ucl">OR [LCL, UCL]</text>
+      <text class="wt">Weight</text>
+      <text class="title">Forest Plot</text>
+    </g>
+
+    <template class="experiment">
+      <g class="experiment"><!-- should get transform="translate(padding,currY++)" -->
+        <text class="expname">error</text>
+        <text class="or lcl ucl">invalid [n/a, n/a]</text>
+        <text class="wt">n/a</text>
+        <g class="rowgraph">
+          <line class="confidenceinterval"/><!-- should get x1="lcl" x2="ucl" -->
+          <rect class="weightbox"/><!-- should get x="or" width="wt" height="wt" -->
+        </g>
+      </g>
+    </template>
+
+    <template class="axes">
+      <g class="axes"><!-- should get transform="translate(padding,currY)" -->
+        <g>
+          <line class="yaxis"/><!-- should get x1="getX(0)" x2="getX(0)" y2="currY+parseInt(plotEl.dataset.extraLineLen)" -->
+          <line class="xaxis" x1="0" x2="300"/>
+          <!-- should get a number of ticks -->
+          <template class="tick">
+            <g class="tick"><!-- should get transform="translate(x,0)" -->
+              <line y2="5"/>
+              <text>val</text>
+            </g>
+          </template>
+          <g class="positioningbutton">
+            <circle r="8"/>
+            <line x1="-5" y1="-5" x2="5" y2="5"/>
+            <line x1="5" y1="5" x2="4" y2="0"/>
+            <line x1="5" y1="5" x2="0" y2="4"/>
+            <line x1="-5" y1="-5" x2="-4" y2="0"/>
+            <line x1="-5" y1="-5" x2="0" y2="-4"/>
+          </g>
+        </g>
+      </g>
+    </template>
+
+    <template class="summary">
+      <g class="summary"><!-- should get transform="translate(padding,currY)" -->
+        <g>
+          <text class="sumname">Total</text>
+          <text class="or lcl ucl">invalid [n/a, n/a]</text>
+          <line class="guideline"/><!-- should get x1="or" x2="or" y2="currY+parseInt(plotEl.dataset.lineHeight)+parseInt(plotEl.dataset.extraLineLen)" -->
+          <g class="sumgraph">
+            <polygon class="confidenceinterval"/><!-- should get points="lcl,0 or,-10 ucl,0 or,10" -->
+          </g>
+        </g>
+      </g>
+    </template>
+
+  </svg>
+</template>
+<template id="forest-plot-group-template">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    class="forestplotgroup"
+    width="900"
+    height="200"
+    version="1.1"
+    data-heading-offset="10"
+    data-group-line-offset="0"
+    data-zero-groups-width="70"
+    data-line-height="30"
+    data-padding="10"
+    data-graph-width="200"
+    data-start-height="80"
+    data-group-start-height="10"
+    data-height-between-groups="50"
+    data-end-height="65"
+    data-min-wt-size="4"
+    data-max-wt-size="14"
+    data-extra-line-len="-40"
+    data-min-diamond-width="14"
+    >
+    <style>
+      svg.forestplotgroup {
+        stroke-width: 2px;
+        fill: white;
+        stroke: black;
+        stroke-linecap: butt;
+        stroke-linejoin: miter;
+        font-size: 14px;
+        font-family: "Arial", sans-serif;
+      }
+
+      svg.forestplotgroup text {
+        stroke-width: 0;
+        fill: black;
+        text-anchor: middle;
+      }
+
+      svg.forestplotgroup .headings text.or.lcl.ucl,
+      svg.forestplotgroup .experiment text.or.lcl.ucl,
+      svg.forestplotgroup .summary text.or.lcl.ucl {
+        transform: translate(610px, 20px);
+      }
+
+      svg.forestplotgroup .headings text.wt,
+      svg.forestplotgroup .experiment text.wt,
+      svg.forestplotgroup .summary text.wt {
+        transform: translate(760px, 20px);
+        text-anchor: end;
+      }
+
+      svg.forestplotgroup .headings text.wtg,
+      svg.forestplotgroup .experiment text.wtg,
+      svg.forestplotgroup .summary text.wtg {
+        transform: translate(780px, 20px);
+        text-anchor: start;
+      }
+
+      svg.forestplotgroup .experiment .expname {
+        text-anchor: start;
+        transform: translate(0, 20px);
+      }
+
+      svg.forestplotgroup .experiment.invalid text {
+        fill: #a44;
+      }
+
+      svg.forestplotgroup .experiment.invalid text.lcl,
+      svg.forestplotgroup .experiment.invalid text.ucl,
+      svg.forestplotgroup .experiment.invalid text.wt {
+        display: none;
+      }
+
+      svg.forestplotgroup .experiment .rowgraph {
+        transform: translate(280px, 0);
+      }
+
+      svg.forestplotgroup .experiment .rowgraph .confidenceinterval {
+        transform: translate(0, 15px);
+      }
+
+      svg.forestplotgroup .experiment .rowgraph .weightbox {
+        transform: translate(0, 15px);
+        fill: black;
+      }
+
+      svg.forestplotgroup .summary > g {
+        transform: translate(0, 20px);
+      }
+
+      svg.forestplotgroup .summary .sumname {
+        text-anchor: start;
+        transform: translate(0, 20px);
+      }
+
+      svg.forestplotgroup .summary .sumgraph {
+        transform: translate(280px, 0);
+      }
+
+      svg.forestplotgroup .summary .sumgraph .confidenceinterval {
+        transform: translate(0, 15px);
+      }
+
+      svg.forestplotgroup .summary .guideline {
+        stroke-width: 1px;
+        transform: translate(280px, 42.5px) scale(1, -1);
+        stroke-dasharray: 5px;
+        stroke-linecap: butt;
+      }
+
+      svg.forestplotgroup .axes > g {
+        transform: translate(280px, 32.5px);
+      }
+
+      svg.forestplotgroup .axes .tick text {
+        font-size: 11px;
+        transform: translate(0, 19px);
+      }
+
+      svg.forestplotgroup .axes .yaxis {
+        transform: translate(0, 5px) scale(1, -1);
+      }
+
+      svg.forestplotgroup .title {
+        font-size: 20px;
+        text-anchor: start;
+        transform: translate(0, -20px);
+      }
+
+      svg.forestplotgroup .summary > g.positioningbutton {
+        transform: translate(800px, 55px);
+        opacity: 0.2;
+      }
+
+      svg.forestplotgroup .positioningbutton:not(:hover) line {
+        display: none;
+      }
+
+      svg.forestplotgroup .positioningbutton:hover {
+        opacity: 1;
+        cursor: pointer;
+      }
+
+      svg.forestplotgroup .positioningbutton line {
+        stroke-width: 1.5px;
+      }
+
+      svg.forestplotgroup .forest-group .group-heading text.label {
+        font-weight: bold;
+        font-size: 120%;
+        font-style: italic;
+        text-anchor: start;
+      }
+
+      svg.forestplotgroup .summary .sumname.sumtotal {
+        font-weight: bold;
+        font-size: 125%;
+      }
+    </style>
+
+    <g transform="translate(10,50)" class="headings">
+      <text class="or lcl ucl">OR [LCL, UCL]</text>
+      <!-- <text class="wt">Weight</text> -->
+      <text class="wtg">Weight</text>
+      <text class="title">Forest Plot by moderator level</text>
+    </g>
+
+    <template class="experiment">
+      <g class="experiment"><!-- should get transform="translate(padding,currY++)" -->
+        <text class="expname">error</text>
+        <text class="or lcl ucl">invalid [n/a, n/a]</text>
+        <!-- <text class="wt">n/a</text> -->
+        <text class="wtg">n/a</text>
+        <g class="rowgraph">
+          <line class="confidenceinterval"/><!-- should get x1="lcl" x2="ucl" -->
+          <rect class="weightbox"/><!-- should get x="or" width="wt" height="wt" -->
+        </g>
+      </g>
+    </template>
+
+    <template class="forest-group">
+      <g class="forest-group">
+        <g class="group-heading">
+          <text class="label">group</text>
+        </g>
+        <g class="group-experiments">
+        </g>
+        <g class="group-summary"><!-- should get transform="translate(padding,currY)" -->
+        </g>
+      </g>
+    </template>
+
+
+    <template class="axes">
+      <g class="axes"><!-- should get transform="translate(padding,currY)" -->
+        <g>
+          <line class="yaxis"/><!-- should get x1="getX(0)" x2="getX(0)" y2="currY+parseInt(plotEl.dataset.extraLineLen)" -->
+          <line class="xaxis" x1="0" x2="300"/>
+          <!-- should get a number of ticks -->
+          <template class="tick">
+            <g class="tick"><!-- should get transform="translate(x,0)" -->
+              <line y2="5"/>
+              <text>val</text>
+            </g>
+          </template>
+        </g>
+      </g>
+    </template>
+
+    <template class="summary">
+      <g class="summary"><!-- should get transform="translate(padding,currY)" -->
+        <g>
+          <text class="sumname sumtotal">Total</text>
+          <text class="or lcl ucl">err [err, err]</text>
+          <line class="guideline"/><!-- should get x1="or" x2="or" y2="currY+parseInt(plotEl.dataset.lineHeight)+parseInt(plotEl.dataset.extraLineLen)" -->
+          <g class="sumgraph">
+            <polygon class="confidenceinterval"/><!-- should get points="lcl,0 or,-10 ucl,0 or,10" -->
+          </g>
+        </g>
+        <g class="positioningbutton">
+          <circle r="8"/>
+          <line x1="-5" y1="-5" x2="5" y2="5"/>
+          <line x1="5" y1="5" x2="4" y2="0"/>
+          <line x1="5" y1="5" x2="0" y2="4"/>
+          <line x1="-5" y1="-5" x2="-4" y2="0"/>
+          <line x1="-5" y1="-5" x2="0" y2="-4"/>
+        </g>
+      </g>
+    </template>
+
+    <template class="group-summary">
+      <g class="summary"><!-- should get transform="translate(padding,currY)" -->
+        <g>
+          <text class="sumname"></text>
+          <text class="or lcl ucl">err [err, err]</text>
+          <!-- <text class="wt">err</text> -->
+          <g class="sumgraph">
+            <polygon class="confidenceinterval"/><!-- should get points="lcl,0 or,-10 ucl,0 or,10" -->
+          </g>
+        </g>
+      </g>
+    </template>
+
+
+  </svg>
+</template>
+<template id="grape-chart-template">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    class="grapechart"
+    viewBox="0 0 800 550"
+    width="800"
+    height="600"
+    version="1.1"
+    data-zero-groups-width="70"
+    data-graph-height="500"
+    data-min-grape-size="7"
+    data-max-grape-size="14"
+    data-first-group="210"
+    data-group-spacing="300"
+    data-grape-spacing="1.5"
+    data-tooltip-padding="20"
+    data-tooltip-min-width="150"
+    data-nb-groups="7"
+    >
+    <style>
+      svg.grapechart {
+        stroke-width: 2px;
+        fill: white;
+        stroke: black;
+        stroke-linecap: butt;
+        stroke-linejoin: miter;
+        font-size: 16px;
+        font-family: "Arial", sans-serif;
+      }
+
+      svg.grapechart text {
+        stroke-width: 0;
+        fill: black;
+        text-anchor: middle;
+      }
+
+      svg.grapechart line.guideline {
+        stroke-width: 1px;
+        stroke-dasharray: 5px;
+        stroke-linecap: butt;
+      }
+
+      svg.grapechart .axes {
+        transform: translate(60px, 560px);
+      }
+
+      svg.grapechart .axes .tick line {
+        font-size: 12px;
+        transform: translate(-5px, 0);
+      }
+
+      svg.grapechart .axes .tick text {
+        font-size: 12px;
+        transform: translate(-10px, 4px);
+        text-anchor: end;
+      }
+
+      svg.grapechart .axes .title {
+        font-size: 20px;
+        text-anchor: start;
+      }
+
+      svg.grapechart .group > g {
+        transform: translate(0, 560px);
+      }
+
+      svg.grapechart .axes .yaxis,
+      svg.grapechart .group .trunk {
+        transform: scale(1, -1);
+        stroke-linecap: round;
+      }
+
+      svg.grapechart .group .xaxis {
+        stroke-linecap: round;
+      }
+
+      svg.grapechart .group .trunk {
+        stroke-width: 0;
+      }
+
+      svg.grapechart .group text.label {
+        transform: translate(0, 20px);
+        text-anchor: middle;
+      }
+
+      svg.grapechart .grape {
+        fill: #8ddce5;
+      }
+
+      svg.grapechart .grape.c0 { fill: #ffa8a8; }
+      svg.grapechart .grape.c1 { fill: #ffd3a8; }
+      svg.grapechart .grape.c2 { fill: #fff9a8; }
+      svg.grapechart .grape.c3 { fill: #bce597; }
+      svg.grapechart .grape.c4 { fill: #7889ac; }
+      svg.grapechart .grape.c5 { fill: #847fb3; }
+      svg.grapechart .grape.c6 { fill: #9975ad; }
+
+      svg.grapechart .grape.invalid {
+        fill: #a44;
+      }
+
+      svg.grapechart .tooltips .grape {
+        fill: transparent;
+        stroke: transparent;
+        stroke-width: 3px;
+      }
+
+      svg.grapechart .tooltips .experiment .grape:hover {
+        fill: #f0f033;
+        stroke: black;
+      }
+
+      svg.grapechart .tooltips .experiment .grape:not(:hover) + .tooltip {
+        display: none;
+      }
+
+      svg.grapechart .tooltip {
+        transform: translate(-60px, -120px);
+      }
+
+      svg.grapechart .tooltip.tophalf {
+        transform: translate(-60px, 17px);
+      }
+
+      svg.grapechart .tooltip text {
+        text-anchor: start;
+        font-size: 12px;
+      }
+
+      svg.grapechart .tooltip text.paper {
+        transform: translate(10px, 20px);
+      }
+
+      svg.grapechart .tooltip text.exp {
+        transform: translate(10px, 38px);
+      }
+
+      svg.grapechart .tooltip text._or {
+        transform: translate(10px, 56px);
+      }
+
+      svg.grapechart .tooltip text.or {
+        transform: translate(60px, 56px);
+      }
+
+      svg.grapechart .tooltip text._wt {
+        transform: translate(10px, 74px);
+      }
+
+      svg.grapechart .tooltip text.wt {
+        transform: translate(60px, 74px);
+      }
+
+      svg.grapechart .tooltip text._ci {
+        transform: translate(10px, 92px);
+      }
+
+      svg.grapechart .tooltip text.ci {
+        transform: translate(60px, 92px);
+      }
+
+      svg.grapechart .invalid .tooltip text.wt,
+      svg.grapechart .invalid .tooltip text.ci {
+        display: none;
+      }
+
+      svg.grapechart .legend text {
+        text-anchor: start;
+        font-size: 14px;
+        transform: translate(0, 4px);
+      }
+
+      svg.grapechart .group:not(.with-legend) g.guideline .legend {
+        display: none;
+      }
+
+      svg.grapechart .group g.guideline .legend text {
+        font-size: 10px;
+      }
+
+      svg.grapechart .group g.guideline .legend text:nth-child(1) {
+        transform: translate(-137.5px, -5px) rotate(-90deg);
+      }
+
+      svg.grapechart .group g.guideline .legend text:nth-child(2) {
+        transform: translate(-127.5px, -5px) rotate(-90deg);
+      }
+
+      svg.grapechart .group:not(.with-pos-button) .positioningbutton {
+        display: none;
+      }
+
+      svg.grapechart .positioningbutton {
+        transform: translate(140px, 20px);
+        opacity: 0.2;
+      }
+
+      svg.grapechart .positioningbutton:not(:hover) line {
+        display: none;
+      }
+
+      svg.grapechart .positioningbutton:hover {
+        opacity: 1;
+        cursor: pointer;
+      }
+
+      svg.grapechart .positioningbutton line {
+        stroke-width: 1.5px;
+      }
+    </style>
+
+    <g class="axes">
+      <line class="yaxis" x1="0" x2="0" y2="500"/>
+      <!-- should get a number of ticks -->
+      <template class="tick">
+        <g class="tick"><!-- should get transform="translate(0,-y)"-->
+          <line x2="5"/>
+          <text>1000</text>
+        </g>
+      </template>
+      <text class="ylabel" transform="translate(-40,-260) rotate(-90)">odds ratio</text>
+      <!-- <g class="legend">
+        <text x="530" y="-515">Legend:</text>
+        <line class="guideline" x1="540" x2="575" y1="-490" y2="-490"/>
+        <text x="580" y="-490">weighted mean</text>
+      </g> -->
+      <text class="title" transform="translate(-40,-530)">Grape Chart</text>
+    </g>
+
+    <template class="group-grapes">
+      <g class="group"><!-- should get transform="translate(groupx,0)" -->
+        <g>
+          <line class="xaxis" x1="-150" x2="150"/>
+          <g class="guideline"><!-- should get transform="translate(0,getY(group.or))"-->
+            <line class="guideline" x1="-142.5" x2="142.5"/>
+            <g class="legend">
+              <text>weighted</text>
+              <text>mean</text>
+            </g>
+          </g>
+          <line class="trunk" x1="0" x2="0" y2="500"/>
+          <text class="label">label</text><!-- should be filled -->
+          <!-- should get some grapes -->
+          <template class="group-grapes-grape">
+            <circle class="experiment grape"/><!-- should get  r="radius" transform="translate(x,getY(or))" -->
+          </template>
+
+          <g class="positioningbutton">
+            <circle r="8"/>
+            <line x1="-5" y1="-5" x2="5" y2="5"/>
+            <line x1="5" y1="5" x2="4" y2="0"/>
+            <line x1="5" y1="5" x2="0" y2="4"/>
+            <line x1="-5" y1="-5" x2="-4" y2="0"/>
+            <line x1="-5" y1="-5" x2="0" y2="-4"/>
+          </g>
+        </g>
+      </g>
+    </template>
+
+    <template class="group-tooltips">
+      <g class="group tooltips"><!-- should get  transform="translate(groupx,0)" -->
+        <g>
+          <template class="group-tooltips-grape">
+            <g class="experiment"><!-- should get transform="translate(x,getY(or))" -->
+              <circle class="grape"/><!-- should get  r="radius" -->
+              <g class="tooltip">
+                <rect height="103"/><!-- should get width="bounding box width"-->
+                <text class="paper">n/a</text><!-- should be filled -->
+                <text class="exp  ">n/a</text><!-- should be filled -->
+                <text class="or   ">invalid data</text><!-- should be filled -->
+                <text class="wt   ">n/a</text><!-- should be filled -->
+                <text class="ci   ">n/a</text><!-- should be filled -->
+                <text class="_or  ">OR:</text>
+                <text class="_wt  ">Weight:</text>
+                <text class="_ci  ">95% CI:</text>
+              </g>
+            </g>
+          </template>
+        </g>
+      </g>
+    </template>
+  </svg>
+</template>
+
+<p class="savingspinner">saving&hellip;</p>
+
+<footer>
+  <p>LiMA (Living Meta-Analysis) at <a href="http://port.ac.uk/">University of Portsmouth</a>, &copy; 2016–2017</p>
+  <p>Feedback and questions are welcome at <a href="mailto:lima@port.ac.uk">lima@port.ac.uk</a>.</p>
+</footer>
+
+
+
+
+<script src="/js/tools.js"></script>
+<script src="/js/tabs.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/userprofile.js"></script>
+<script src="/js/formulas.js"></script>
+<script src="/js/graphs.js"></script>
+<script src="/js/papers.js"></script>
+<script src="/js/metaanalyses.js"></script>
+<script src="/js/version.js"></script>
+<script>
+function timeoutLoading() {
+  if (document.body.classList.contains('loading')) {
+    document.querySelector('.loadingspinner').textContent = 'Still loading; the connection may be slow... If this message never goes away, there may be a problem – please contact us and tell us about it.';
+  }
+}
+setTimeout(timeoutLoading, 5000);
+window.lima.initPage = function () {
+  window.lima.initMetaanalysesJS();
+  window.lima.requestAndFillUserProfile();
+  window.lima.requestAndFillMetaanalysis();
+};
+</script>
+
+</body>

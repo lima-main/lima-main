@@ -1,0 +1,5 @@
+<!doctype html>
+<title>LiMA (Live Meta-Analysis) API documentation</title>
+<link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+
+Please see <a href="https://github.com/jacekkopecky/living-meta-analysis/blob/master/docs/API.md">LiMA (Live Meta-Analysis) API documentation</a> on GitHub.com.

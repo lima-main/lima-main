@@ -1,0 +1,12 @@
+.datatable {
+  text-align: center;
+  border: 4px solid black;
+}
+
+.datatable .paperstart td {
+  border-top: 2px solid black;
+}
+
+.datatable .computed {
+  text-align: right;
+}
