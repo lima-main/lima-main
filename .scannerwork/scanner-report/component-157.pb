@@ -1,1 +1,0 @@
-ù 2cssXyhrBwebpages-react/components/metaanalysis/plots/SimpleForestPlots.css

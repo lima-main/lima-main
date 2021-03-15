@@ -1,1 +1,0 @@
-s 2cssXhr+webpages-react/components/layout/Footer.css

@@ -1,1 +1,0 @@
-} 2cssXhrFwebpages-react/components/metaanalysis/aggregates/SimpleAggregates.css

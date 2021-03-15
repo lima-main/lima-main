@@ -1,1 +1,0 @@
-Q 2webX‰hr%webpages/img/example-grape-chart.html

@@ -1,5 +1,0 @@
-footer {
-  background-color: #d6edfe;
-  padding: 1em;
-  margin-top: auto;
-}

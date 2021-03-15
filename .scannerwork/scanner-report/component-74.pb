@@ -1,1 +1,0 @@
-J 2webXhrwebpages/about/terms.html

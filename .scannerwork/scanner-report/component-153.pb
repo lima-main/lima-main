@@ -1,1 +1,0 @@
-™ 2jsXµhr9webpages-react/components/metaanalysis/datatable/Paper.js

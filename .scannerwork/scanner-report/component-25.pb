@@ -1,1 +1,0 @@
- 2jsX/hr!test/qunit/tests/snapshot-test.js
