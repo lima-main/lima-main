@@ -1,5 +1,8 @@
 .parcel-cache
+eslint-report.html
+eslint-report.json
 coverage
 node_modules
-webpages/lib
-webpages/react-dist
+webpages
+test
+# webpages-react/tools/legacy

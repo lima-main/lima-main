@@ -3,6 +3,7 @@
 }
 
 .aggregates .analysisButton,
+.aggregates .addAnalysisButton,
 .aggregates .addSimpleAnalysisButton,
 .aggregates .addModeratorAnalysisButton,
 .aggregates #filterModeratorsButton {
@@ -34,11 +35,13 @@
   cursor: default;
 }
 
+.aggregates .addAnalysisButton,
 .aggregates .addSimpleAnalysisButton,
 .aggregates .addModeratorAnalysisButton {
   width: auto !important;
 }
 
+.aggregates .addAnalysisButton:hover,
 .aggregates .addSimpleAnalysisButton:hover,
 .aggregates .addModeratorAnalysisButton:hover,
 .aggregates #filterModeratorsButton:hover {
@@ -64,6 +67,7 @@
   overflow-x: scroll;
 }
 
+#inputForm label,
 #simpleInputForm label,
 #moderatorInputForm label {
   display: block;
@@ -92,12 +96,14 @@
   background-color: red;
 }
 
+#inputForm,
 #simpleInputForm,
 #moderatorInputForm {
   display: block;
   text-align: center;
 }
 
+#inputForm label,
 #simpleInputForm label,
 #moderatorInputForm label,
 #modFilterForm div label {
@@ -107,8 +113,10 @@
   text-align: left;
 }
 
+#inputForm label input,
 #moderatorInputForm label input,
 #simpleInputForm label input,
+#inputForm label input:focus,
 #moderatorInputForm label input:focus,
 #simpleInputForm label input:focus {
   border: 0.1em solid black;
@@ -132,6 +140,7 @@
   width: 50%;
 }
 
+#inputForm label select,
 #simpleInputForm label select,
 #moderatorInputForm label select {
   width: 60%;

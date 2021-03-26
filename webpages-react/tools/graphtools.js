@@ -1,48 +1,45 @@
 import { isColCompletelyDefined, getDatumValue, getAggregateDatumValue } from './datatools';
 
-line.or = getDatumValue(orFunc, exp);
-line.wt = getDatumValue(wtFunc, exp);
-line.lcl = getDatumValue(lclFunc, exp);
-line.ucl = getDatumValue(uclFunc, exp);
+export function getSimpleForestPlotData(graph) {
+  const { papers } = graph.metaanalysis;
+  const { formulaParams } = graph;
 
-function Graph(){
-  orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
-  wtFunc = { formulaName: 'weight', formulaParams };
-  lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
-  uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
-}
+  let orFunc;
+  let wtFunc;
+  let lclFunc;
+  let uclFunc;
 
-function numberGraph(){
-  orFunc = { formulaName: 'logOddsRatioNumber', formulaParams };
-  wtFunc = { formulaName: 'weightNumber', formulaParams };
-  lclFunc = { formulaName: 'lowerConfidenceLimitNumber', formulaParams };
-  uclFunc = { formulaName: 'upperConfidenceLimitNumber', formulaParams };
-}
+  const lineHeight = 30;
+  const graphWidth = 300;
+  const startHeight = 70;
+  const endHeight = 65;
+  const minWtSize = 4;
+  const maxWtSize = 14;
+  const minDiamondWidth = 14;
 
-function percentGraph(){
-  orFunc = { formulaName: 'logOddsRatioPercent', formulaParams: [formulaParams[0], formulaParams[2]] };
-  wtFunc = { formulaName: 'weightPercent', formulaParams };
-  lclFunc = { formulaName: 'lowerConfidenceLimitPercent', formulaParams };
-  uclFunc = { formulaName: 'upperConfidenceLimitPercent', formulaParams };
-}
-
-function deleteLine(){
-  if (Number.isNaN(line.or * 0)
-  || Number.isNaN(line.lcl * 0)
-  || Number.isNaN(line.ucl * 0) 
-  || Number.isNaN(line.wt * 0)
-  || line.or == null 
-  || line.lcl == null 
-  || line.ucl == null 
-  || line.wt == null) {
-    delete line.or;
-    delete line.lcl;
-    delete line.ucl;
-    delete line.wt;
+  if (graph.formulaName === 'forestPlotGraph' && isColCompletelyDefined(graph)) {
+    orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
+    wtFunc = { formulaName: 'weight', formulaParams };
+    lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
+    uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
+  } else
+  if (graph.formulaName === 'forestPlotNumberGraph' && isColCompletelyDefined(graph)) {
+    orFunc = { formulaName: 'logOddsRatioNumber', formulaParams };
+    wtFunc = { formulaName: 'weightNumber', formulaParams };
+    lclFunc = { formulaName: 'lowerConfidenceLimitNumber', formulaParams };
+    uclFunc = { formulaName: 'upperConfidenceLimitNumber', formulaParams };
+  } else
+  if (graph.formulaName === 'forestPlotPercentGraph' && isColCompletelyDefined(graph)) {
+    orFunc = { formulaName: 'logOddsRatioPercent', formulaParams: [formulaParams[0], formulaParams[2]] };
+    wtFunc = { formulaName: 'weightPercent', formulaParams };
+    lclFunc = { formulaName: 'lowerConfidenceLimitPercent', formulaParams };
+    uclFunc = { formulaName: 'upperConfidenceLimitPercent', formulaParams };
+  } else {
+    return;
+    // this function does not handle this type of graph or the graph is not completely defined
   }
-}
 
-function getData(){
+  // get the data
   orFunc.formula = window.lima.createFormulaString(orFunc);
   wtFunc.formula = window.lima.createFormulaString(wtFunc);
   lclFunc.formula = window.lima.createFormulaString(lclFunc);
@@ -51,50 +48,61 @@ function getData(){
   wtFunc.formulaObj = window.lima.getFormulaObject(wtFunc.formulaName);
   lclFunc.formulaObj = window.lima.getFormulaObject(lclFunc.formulaName);
   uclFunc.formulaObj = window.lima.getFormulaObject(uclFunc.formulaName);
-}
 
-function drawLine(){
-  const line = {};
-  line.title = paper.title || 'new paper';
-  if (paper.experiments.length > 1) {
-      let expTitle = exp.title || 'new experiment';
-      if (expTitle.match(/^\d+$/)) expTitle = `Exp. ${expTitle}`;
-      line.title += ` (${expTitle})`;
+  const lines = [];
+
+  for (const paper of papers) {
+    for (const exp of paper.experiments) {
+      if (!exp.excluded) {
+        const line = {};
+        line.title = paper.title || 'new paper';
+        if (paper.experiments.length > 1) {
+          let expTitle = exp.title || 'new experiment';
+          if (expTitle.match(/^\d+$/)) expTitle = `Exp. ${expTitle}`;
+          line.title += ` (${expTitle})`;
+        }
+        line.or = getDatumValue(orFunc, exp);
+        line.wt = getDatumValue(wtFunc, exp);
+        line.lcl = getDatumValue(lclFunc, exp);
+        line.ucl = getDatumValue(uclFunc, exp);
+        lines.push(line);
+
+        // if any of the values is NaN or ±Infinity, disregard this experiment
+        if (Number.isNaN(line.or * 0) || Number.isNaN(line.lcl * 0)
+              || Number.isNaN(line.ucl * 0) || Number.isNaN(line.wt * 0)
+              || line.or == null || line.lcl == null || line.ucl == null || line.wt == null) {
+          delete line.or;
+          delete line.lcl;
+          delete line.ucl;
+          delete line.wt;
+        }
+      }
     }
-}
-
-function grouping(){
-  const perGroup = {};
-  for (const dataGroup of dataGroups) {
-    const { group } = dataGroup.data[0];
-    perGroup[group] = {};
-    perGroup[group].wt = dataGroup.data.reduce((acc, line) => (
-      line.wt != null ? acc + line.wt : acc
-    ), 0);
-    if (perGroup[group].wt === 0) perGroup[group].wt = 1;
-    perGroup[group].or = dataGroup.data.reduce((acc, line) => (
-      line.wt !== null ? acc + line.or * line.wt : acc
-    ), 0) / perGroup[group].wt;
   }
-}
-
-function computeMinWeightSpread(){
-  const MIN_WT_SPREAD = 2.5;
-  if (maxWt / minWt < MIN_WT_SPREAD) {
-    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
-    maxWt = minWt * MIN_WT_SPREAD;
+  if (lines.length === 0) {
+    const noDataLine = { title: 'No data' };
+    lines.push(noDataLine);
   }
+  const orAggrFunc = { formulaName: 'weightedMeanAggr', formulaParams: [orFunc, wtFunc] };
+  const lclAggrFunc = { formulaName: 'lowerConfidenceLimitAggr', formulaParams: [orFunc, wtFunc] };
+  const uclAggrFunc = { formulaName: 'upperConfidenceLimitAggr', formulaParams: [orFunc, wtFunc] };
 
-  // minWt = 0;
-  // todo we can uncomment this to make all weights relative to only the maximum weight
-  // square root the weights because we're using them as
-  // lengths of the side of a square whose area should correspond to the weight
-  maxWt = Math.sqrt(maxWt);
-  minWt = Math.sqrt(minWt);
-  const wtRatio = (1 / (maxWt - minWt)) * (maxGrapeSize - minGrapeSize);
-}
+  orAggrFunc.formula = window.lima.createFormulaString(orAggrFunc);
+  lclAggrFunc.formula = window.lima.createFormulaString(lclAggrFunc);
+  uclAggrFunc.formula = window.lima.createFormulaString(uclAggrFunc);
+  orAggrFunc.formulaObj = window.lima.getFormulaObject(orAggrFunc.formulaName);
+  lclAggrFunc.formulaObj = window.lima.getFormulaObject(lclAggrFunc.formulaName);
+  uclAggrFunc.formulaObj = window.lima.getFormulaObject(uclAggrFunc.formulaName);
+  orAggrFunc.metaanalysis = graph.metaanalysis;
+  lclAggrFunc.metaanalysis = graph.metaanalysis;
+  orAggrFunc.metaanalysis = graph.metaanalysis;
 
-function computeSumOfWeight(){
+  const aggregates = {
+    or: getAggregateDatumValue(orAggrFunc, graph.metaanalysis.papers),
+    lcl: getAggregateDatumValue(lclAggrFunc, graph.metaanalysis.papers),
+    ucl: getAggregateDatumValue(uclAggrFunc, graph.metaanalysis.papers),
+  };
+
   if (Number.isNaN(aggregates.or * 0)
         || Number.isNaN(aggregates.lcl * 0)
         || Number.isNaN(aggregates.ucl * 0)) {
@@ -163,97 +171,18 @@ function computeSumOfWeight(){
     return (val - minLcl) * xRatio;
   }
 
-  computeMinWeightSpread();
-
-  
-}
-
-function getConfidenceInterval(){
-  if ((uclX - lclX) < minDiamondWidth) {
-    const ratio = (uclX - lclX) / minDiamondWidth;
-    lclX = orX + (lclX - orX) / ratio;
-    uclX = orX + (uclX - orX) / ratio;
-  }
-  const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
-}
-
-orAggrFunc.formula = window.lima.createFormulaString(orAggrFunc);
-lclAggrFunc.formula = window.lima.createFormulaString(lclAggrFunc);
-uclAggrFunc.formula = window.lima.createFormulaString(uclAggrFunc);
-orAggrFunc.formulaObj = window.lima.getFormulaObject(orAggrFunc.formulaName);
-lclAggrFunc.formulaObj = window.lima.getFormulaObject(lclAggrFunc.formulaName);
-uclAggrFunc.formulaObj = window.lima.getFormulaObject(uclAggrFunc.formulaName);
-
-export function getSimpleForestPlotData(graph) {
-  const { papers } = graph.metaanalysis;
-  const { formulaParams } = graph;
-
-  let orFunc;
-  let wtFunc;
-  let lclFunc;
-  let uclFunc;
-
-  const lineHeight = 30;
-  const graphWidth = 300;
-  const startHeight = 70;
-  const endHeight = 65;
-  const minWtSize = 4;
-  const maxWtSize = 14;
-  const minDiamondWidth = 14;
-
-  if (graph.formulaName === 'forestPlotGraph' && isColCompletelyDefined(graph)) {
-    Graph();
-  } else
-  if (graph.formulaName === 'forestPlotNumberGraph' && isColCompletelyDefined(graph)) {
-    numberGraph();
-  } else
-  if (graph.formulaName === 'forestPlotPercentGraph' && isColCompletelyDefined(graph)) {
-    percentGraph();
-  } else {
-    return;
-    // this function does not handle this type of graph or the graph is not completely defined
+  // adjust weights so that in case of very similar weights they don't range from minimum to maximum
+  const MIN_WT_SPREAD = 2.5;
+  if (maxWt / minWt < MIN_WT_SPREAD) {
+    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
+    maxWt = minWt * MIN_WT_SPREAD;
   }
 
-  // get the data
-  getData();
-
-  const lines = [];
-
-  for (const paper of papers) {
-    for (const exp of paper.experiments) {
-      if (!exp.excluded) {
-        
-        drawLine();
-        lines.push(line);
-
-        // if any of the values is NaN or ±Infinity, disregard this experiment
-        deleteLine();
-      }
-    }
-  }
-  if (lines.length === 0) {
-    const noDataLine = { title: 'No data' };
-    lines.push(noDataLine);
-  }
-  const orAggrFunc = { formulaName: 'weightedMeanAggr', formulaParams: [orFunc, wtFunc] };
-  const lclAggrFunc = { formulaName: 'lowerConfidenceLimitAggr', formulaParams: [orFunc, wtFunc] };
-  const uclAggrFunc = { formulaName: 'upperConfidenceLimitAggr', formulaParams: [orFunc, wtFunc] };
-
-  
-  orAggrFunc.metaanalysis = graph.metaanalysis;
-  lclAggrFunc.metaanalysis = graph.metaanalysis;
-  orAggrFunc.metaanalysis = graph.metaanalysis;
-
-  const aggregates = {
-    or: getAggregateDatumValue(orAggrFunc, graph.metaanalysis.papers),
-    lcl: getAggregateDatumValue(lclAggrFunc, graph.metaanalysis.papers),
-    ucl: getAggregateDatumValue(uclAggrFunc, graph.metaanalysis.papers),
-  };
-
-  computeSumOfWeight();
-
-  let lclX = getX(aggregates.lcl);
-  let uclX = getX(aggregates.ucl);
+  // minWt = 0;
+  // we can uncomment this to make all weights relative to only the maximum weight
+  maxWt = Math.sqrt(maxWt);
+  minWt = Math.sqrt(minWt);
+  const wtRatio = (1 / (maxWt - minWt)) * (maxWtSize - minWtSize);
 
   let currY = startHeight;
 
@@ -263,8 +192,15 @@ export function getSimpleForestPlotData(graph) {
   }
 
   if (!Number.isNaN(aggregates.or * 0)) {
+    let lclX = getX(aggregates.lcl);
+    let uclX = getX(aggregates.ucl);
     const orX = getX(aggregates.or);
-    getConfindenceInterval();
+    if ((uclX - lclX) < minDiamondWidth) {
+      const ratio = (uclX - lclX) / minDiamondWidth;
+      lclX = orX + (lclX - orX) / ratio;
+      uclX = orX + (uclX - orX) / ratio;
+    }
+    const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
 
     aggregates.minWtSize = minWtSize;
     aggregates.minWt = minWt;
@@ -319,20 +255,36 @@ export function getGroupingForestPlotData(graph) {
   const minDiamondWidth = 14;
 
   if (graph.formulaName === 'forestPlotGroupGraph' && isColCompletelyDefined(graph)) {
-    Graph();
+    orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
+    wtFunc = { formulaName: 'weight', formulaParams };
+    lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
+    uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
   } else
   if (graph.formulaName === 'forestPlotGroupNumberGraph' && isColCompletelyDefined(graph)) {
-    numberGraph();
+    orFunc = { formulaName: 'logOddsRatioNumber', formulaParams };
+    wtFunc = { formulaName: 'weightNumber', formulaParams };
+    lclFunc = { formulaName: 'lowerConfidenceLimitNumber', formulaParams };
+    uclFunc = { formulaName: 'upperConfidenceLimitNumber', formulaParams };
   } else
   if (graph.formulaName === 'forestPlotGroupPercentGraph' && isColCompletelyDefined(graph)) {
-    percentGraph();
+    orFunc = { formulaName: 'logOddsRatioPercent', formulaParams: [formulaParams[0], formulaParams[2]] };
+    wtFunc = { formulaName: 'weightPercent', formulaParams };
+    lclFunc = { formulaName: 'lowerConfidenceLimitPercent', formulaParams };
+    uclFunc = { formulaName: 'upperConfidenceLimitPercent', formulaParams };
   } else {
     // this function does not handle this type of graph or the graph is not completely defined
     return;
   }
 
   // get the data
-  getData();
+  orFunc.formula = window.lima.createFormulaString(orFunc);
+  wtFunc.formula = window.lima.createFormulaString(wtFunc);
+  lclFunc.formula = window.lima.createFormulaString(lclFunc);
+  uclFunc.formula = window.lima.createFormulaString(uclFunc);
+  orFunc.formulaObj = window.lima.getFormulaObject(orFunc.formulaName);
+  wtFunc.formulaObj = window.lima.getFormulaObject(wtFunc.formulaName);
+  lclFunc.formulaObj = window.lima.getFormulaObject(lclFunc.formulaName);
+  uclFunc.formulaObj = window.lima.getFormulaObject(uclFunc.formulaName);
 
   const lines = [];
   const groups = [];
@@ -340,15 +292,38 @@ export function getGroupingForestPlotData(graph) {
   for (const paper of papers) {
     for (const exp of paper.experiments) {
       if (!exp.excluded) {
-        
-        drawLine();
+        const line = {};
+        line.title = paper.title || 'new paper';
+        if (paper.experiments.length > 1) {
+          let expTitle = exp.title || 'new experiment';
+          if (expTitle.match(/^\d+$/)) expTitle = `Exp. ${expTitle}`;
+          line.title += ` (${expTitle})`;
+        }
+        line.or = getDatumValue(orFunc, exp);
+        line.wt = getDatumValue(wtFunc, exp);
+        line.lcl = getDatumValue(lclFunc, exp);
+        line.ucl = getDatumValue(uclFunc, exp);
         line.group = getDatumValue(moderatorParam, exp);
         if (line.group != null && line.group !== '' && groups.indexOf(line.group) === -1) {
           groups.push(line.group);
         }
 
         // if any of the values is NaN or ±Infinity, disregard this experiment
-        deleteLine();
+        if (
+          Number.isNaN(line.or * 0)
+        || Number.isNaN(line.lcl * 0)
+        || Number.isNaN(line.ucl * 0)
+        || Number.isNaN(line.wt * 0)
+        || line.or == null
+        || line.lcl == null
+        || line.ucl == null
+        || line.wt == null
+        ) {
+          delete line.or;
+          delete line.lcl;
+          delete line.ucl;
+          delete line.wt;
+        }
 
         lines.push(line);
       }
@@ -389,8 +364,18 @@ export function getGroupingForestPlotData(graph) {
     dataGroups.push(dataGroup);
   }
 
-  grouping();
-
+  const perGroup = {};
+  for (const dataGroup of dataGroups) {
+    const { group } = dataGroup.lines[0];
+    perGroup[group] = {};
+    perGroup[group].wt = dataGroup.lines.reduce((acc, line) => (
+      line.wt !== null ? acc + line.wt : acc
+    ), 0);
+    if (perGroup[group].wt === 0) perGroup[group].wt = 1;
+    perGroup[group].or = dataGroup.lines.reduce((acc, line) => (
+      line.wt !== null ? acc + line.or * line.wt : acc
+    ), 0) / perGroup[group].wt;
+  }
   const orAggrFunc = {
     formulaName: 'weightedMeanAggr',
     formulaParams: [orFunc, wtFunc],
@@ -404,14 +389,103 @@ export function getGroupingForestPlotData(graph) {
     formulaParams: [orFunc, wtFunc],
   };
 
+  orAggrFunc.formula = window.lima.createFormulaString(orAggrFunc);
+  lclAggrFunc.formula = window.lima.createFormulaString(lclAggrFunc);
+  uclAggrFunc.formula = window.lima.createFormulaString(uclAggrFunc);
+  orAggrFunc.formulaObj = window.lima.getFormulaObject(orAggrFunc.formulaName);
+  lclAggrFunc.formulaObj = window.lima.getFormulaObject(lclAggrFunc.formulaName);
+  uclAggrFunc.formulaObj = window.lima.getFormulaObject(uclAggrFunc.formulaName);
+
   const aggregates = {
     or: getAggregateDatumValue(orAggrFunc, papers),
     lcl: getAggregateDatumValue(lclAggrFunc, papers),
     ucl: getAggregateDatumValue(uclAggrFunc, papers),
   };
 
-  computeSumOfWeight();
-  
+  if (Number.isNaN(aggregates.or * 0)
+      || Number.isNaN(aggregates.lcl * 0)
+      || Number.isNaN(aggregates.ucl * 0)
+  ) {
+    aggregates.lcl = 0;
+    aggregates.ucl = 0;
+  }
+
+  // compute
+  //   sum of wt
+  //   min and max of wt
+  //   min of lcl and aggr lcl
+  //   max of ucl and aggr ucl
+  let sumOfWt = 0;
+  let minWt = Infinity;
+  let maxWt = -Infinity;
+  let minLcl = aggregates.lcl;
+  let maxUcl = aggregates.ucl;
+
+  if (Number.isNaN(minLcl)) minLcl = 0;
+  if (Number.isNaN(maxUcl)) maxUcl = 0;
+  for (const line of lines) {
+    if (line.or !== null) {
+      sumOfWt += line.wt;
+      if (line.wt < minWt) minWt = line.wt;
+      if (line.wt > maxWt) maxWt = line.wt;
+      if (line.lcl < minLcl) minLcl = line.lcl;
+      if (line.ucl > maxUcl) maxUcl = line.ucl;
+    }
+  }
+
+  if (minLcl < -10) minLcl = -10;
+  if (maxUcl > 10) maxUcl = 10;
+
+  if (minWt === Infinity) {
+    minWt = 1;
+    maxWt = 1;
+  }
+  if (sumOfWt === 0) sumOfWt = 1;
+
+  let TICK_SPACING;
+  // select tick spacing based on a rough estimate of how many ticks we'll need anyway
+  const clSpread = (maxUcl - minLcl) / Math.LN10; // how many orders of magnitude we cover
+  if (clSpread > 3) TICK_SPACING = [100];
+  else if (clSpread > 1.3) TICK_SPACING = [10];
+  else TICK_SPACING = [2, 2.5, 2]; // ticks at 1, 2, 5, 10, 20, 50, 100...
+
+  // adjust minimum and maximum around decimal non-logarithmic values
+  let newBound = 1;
+  let tickNo = 0;
+  while (Math.log(newBound) > minLcl) {
+    tickNo -= 1;
+    newBound /= TICK_SPACING[window.lima._.mod(tickNo, TICK_SPACING.length)];
+    // JS % can be negative
+  }
+  minLcl = Math.log(newBound) - 0.1;
+
+  let startingTickVal = newBound;
+  let startingTick = tickNo;
+
+  newBound = 1;
+  tickNo = 0;
+  while (Math.log(newBound) < maxUcl) {
+    newBound *= TICK_SPACING[window.lima._.mod(tickNo, TICK_SPACING.length)];
+    tickNo += 1;
+  }
+  maxUcl = Math.log(newBound) + 0.1;
+
+  const xRatio = (1 / (maxUcl - minLcl)) * graphWidth;
+
+  function getX(val) {
+    return (val - minLcl) * xRatio;
+  }
+
+  const MIN_WT_SPREAD = 2.5;
+  if (maxWt / minWt < MIN_WT_SPREAD) {
+    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
+    maxWt = minWt * MIN_WT_SPREAD;
+  }
+
+  maxWt = Math.sqrt(maxWt);
+  minWt = Math.sqrt(minWt);
+  const wtRatio = (1 / (maxWt - minWt)) * (maxWtSize - minWtSize);
+
   let currY = startHeight;
   let currGY = groupStartHeight;
   let hasInvalid = false;
@@ -460,7 +534,12 @@ export function getGroupingForestPlotData(graph) {
       let lclX = getX(groupAggregates.lcl);
       let uclX = getX(groupAggregates.ucl);
       const orX = getX(groupAggregates.or);
-      getConfindenceInterval();
+      if ((uclX - lclX) < minDiamondWidth) {
+        const ratio = (uclX - lclX) / minDiamondWidth;
+        lclX = orX + (lclX - orX) / ratio;
+        uclX = orX + (uclX - orX) / ratio;
+      }
+      const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
       dataGroups[i].confidenceInterval = confidenceInterval;
       dataGroups[i].groupAggregates = groupAggregates;
       dataGroups[i].currGY = currGY;
@@ -485,8 +564,16 @@ export function getGroupingForestPlotData(graph) {
   // put summary into the plot
   if (!Number.isNaN(aggregates.or * 0) && !hasInvalid) {
     currY += 2 * lineHeight;
+    let lclX = getX(aggregates.lcl);
+    let uclX = getX(aggregates.ucl);
     const orX = getX(aggregates.or);
-    getConfindenceInterval();
+    if ((uclX - lclX) < minDiamondWidth) {
+      const ratio = (uclX - lclX) / minDiamondWidth;
+      lclX = orX + (lclX - orX) / ratio;
+      uclX = orX + (uclX - orX) / ratio;
+    }
+
+    const confidenceInterval = `${lclX},0 ${orX},-10 ${uclX},0 ${orX},10`;
     graph.confidenceInterval = confidenceInterval;
   }
 
@@ -536,7 +623,10 @@ export function getGrapeChartData(graph) {
   const nbGroups = 7;
 
   if (graph.formulaName === 'grapeChartGraph' && isColCompletelyDefined(graph)) {
-    Graph();
+    orFunc = { formulaName: 'logOddsRatio', formulaParams: [formulaParams[0], formulaParams[2]] };
+    wtFunc = { formulaName: 'weight', formulaParams };
+    lclFunc = { formulaName: 'lowerConfidenceLimit', formulaParams };
+    uclFunc = { formulaName: 'upperConfidenceLimit', formulaParams };
   } else
   if (graph.formulaName === 'grapeChartNumberGraph' && isColCompletelyDefined(graph)) {
     orFunc = { formulaName: 'logOddsRatioNumber', formulaParams: dataParams };
@@ -554,7 +644,14 @@ export function getGrapeChartData(graph) {
     return;
   }
 
-  getData();
+  orFunc.formula = window.lima.createFormulaString(orFunc);
+  wtFunc.formula = window.lima.createFormulaString(wtFunc);
+  lclFunc.formula = window.lima.createFormulaString(lclFunc);
+  uclFunc.formula = window.lima.createFormulaString(uclFunc);
+  orFunc.formulaObj = window.lima.getFormulaObject(orFunc.formulaName);
+  wtFunc.formulaObj = window.lima.getFormulaObject(wtFunc.formulaName);
+  lclFunc.formulaObj = window.lima.getFormulaObject(lclFunc.formulaName);
+  uclFunc.formulaObj = window.lima.getFormulaObject(uclFunc.formulaName);
 
   const data = [];
   const groups = [];
@@ -568,13 +665,27 @@ export function getGrapeChartData(graph) {
         if (line.exp.match(/^\d+$/)) {
           line.exp = `Exp. ${line.exp}`;
         }
+        line.or = getDatumValue(orFunc, exp);
+        line.wt = getDatumValue(wtFunc, exp);
+        line.lcl = getDatumValue(lclFunc, exp);
+        line.ucl = getDatumValue(uclFunc, exp);
         line.group = getDatumValue(moderatorParam, exp);
         if (line.group != null && line.group !== '' && groups.indexOf(line.group) === -1) {
           groups.push(line.group);
         }
-        
-        deleteLine();
-
+        if (Number.isNaN(line.or * 0)
+            || Number.isNaN(line.lcl * 0)
+            || Number.isNaN(line.ucl * 0)
+            || Number.isNaN(line.wt * 0)
+            || line.or == null
+            || line.lcl == null
+            || line.ucl == null
+            || line.wt == null) {
+          delete line.or;
+          delete line.lcl;
+          delete line.ucl;
+          delete line.wt;
+        }
         data.push(line);
       }
     }
@@ -598,7 +709,18 @@ export function getGrapeChartData(graph) {
     dataGroups.push(dataGroup);
   }
 
-  grouping();
+  const perGroup = {};
+  for (const dataGroup of dataGroups) {
+    const { group } = dataGroup.data[0];
+    perGroup[group] = {};
+    perGroup[group].wt = dataGroup.data.reduce((acc, line) => (
+      line.wt != null ? acc + line.wt : acc
+    ), 0);
+    if (perGroup[group].wt === 0) perGroup[group].wt = 1;
+    perGroup[group].or = dataGroup.data.reduce((acc, line) => (
+      line.wt !== null ? acc + line.or * line.wt : acc
+    ), 0) / perGroup[group].wt;
+  }
 
   let minWt = Infinity;
   let maxWt = -Infinity;
@@ -663,8 +785,19 @@ export function getGrapeChartData(graph) {
     return logVal > midOr;
   }
 
-  computeMinWeightSpread();
+  const MIN_WT_SPREAD = 2.5;
+  if (maxWt / minWt < MIN_WT_SPREAD) {
+    minWt = (maxWt + minWt) / 2 / Math.sqrt(MIN_WT_SPREAD);
+    maxWt = minWt * MIN_WT_SPREAD;
+  }
 
+  // minWt = 0;
+  // todo we can uncomment this to make all weights relative to only the maximum weight
+  // square root the weights because we're using them as
+  // lengths of the side of a square whose area should correspond to the weight
+  maxWt = Math.sqrt(maxWt);
+  minWt = Math.sqrt(minWt);
+  const wtRatio = (1 / (maxWt - minWt)) * (maxGrapeSize - minGrapeSize);
 
   function getGrapeRadius(wt) {
     if (wt == null) return minGrapeSize;
