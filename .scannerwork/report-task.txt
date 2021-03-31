@@ -1,7 +1,7 @@
 organization=lima-main
 projectKey=lima-main_lima-main
 serverUrl=https://sonarcloud.io
-serverVersion=8.0.0.18488
+serverVersion=8.0.0.18852
 dashboardUrl=https://sonarcloud.io/dashboard?id=lima-main_lima-main
-ceTaskId=AXhhzFEEJYUEGF9h7--h
-ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AXhhzFEEJYUEGF9h7--h
+ceTaskId=AXiIIXwqZEwj6semDxdI
+ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AXiIIXwqZEwj6semDxdI
