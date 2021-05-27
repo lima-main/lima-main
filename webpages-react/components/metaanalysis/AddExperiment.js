@@ -30,6 +30,7 @@ const createNewExperiment = (experimentDetails) => {
       }
     }
   }
+
   for (const col of paper.columns) {
     if (!data[col.id]) {
       data[col.id] = null;

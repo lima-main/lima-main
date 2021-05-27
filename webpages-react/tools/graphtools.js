@@ -847,7 +847,7 @@ export function getGrapeChartData(graph) {
       }
 
       let boxWidth = +tooltipMinWidth;
-      for (const txt of texts) {
+      for (const txt of text) {
         try {
           const w = txt.getBBox().width;
           boxWidth = Math.max(boxWidth, w);
